@@ -42,9 +42,16 @@ const pieData = [
   { name: 'Alto', value: 30, color: '#FDBA74' },
 ];
 
+import { LayoutDashboard } from 'lucide-react';
+
+// ...
 const DashboardPage = () => {
   return (
-    <DashboardLayout>
+    <DashboardLayout 
+      title="Dashboard" 
+      subtitle="Vista y analisis" 
+      Icon={LayoutDashboard}
+    >
       {/* Top Filter */}
       <Box sx={styles.filterBoxStyles}>
         <FormControl size="small" sx={{ minWidth: 120 }}>
@@ -88,12 +95,12 @@ const DashboardPage = () => {
         {/* Left Chart: Risk Levels */}
         <Grid size={{ xs: 12, md: 5 }}>
           <Card sx={styles.chartCardStyles}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>Distribucion de niveles de riesgo</Typography>
-              <Box sx={{ textAlign: 'right' }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, display: 'block' }}>Programa academico</Typography>
-                <Select size="small" defaultValue="default" sx={{ borderRadius: '8px', mt: 0.5 }}>
-                  <MenuItem value="default">Programa academico</MenuItem>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: { xs: 2.5, md: 4 }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1rem', md: '1.25rem' } }}>Distribucion de niveles de riesgo</Typography>
+              <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
+                <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', fontSize: '10px' }}>Programa academico</Typography>
+                <Select size="small" defaultValue="default" sx={{ borderRadius: '8px', mt: 0.5, height: { xs: 32, md: 36 }, fontSize: '12px' }}>
+                  <MenuItem value="default">Seleccionar</MenuItem>
                 </Select>
               </Box>
             </Box>
@@ -137,10 +144,10 @@ const DashboardPage = () => {
         {/* Right Chart: Evaluations */}
         <Grid size={{ xs: 12, md: 7 }}>
           <Card sx={styles.chartCardStyles}>
-             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-               <Typography variant="h6" sx={{ fontWeight: 800 }}>Evaluaciones realizadas</Typography>
-               <Select size="small" defaultValue="default" sx={{ borderRadius: '8px' }}>
-                  <MenuItem value="default">Programa academico</MenuItem>
+             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 2.5, md: 4 } }}>
+               <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1rem', md: '1.25rem' } }}>Evaluaciones realizadas</Typography>
+               <Select size="small" defaultValue="default" sx={{ borderRadius: '8px', height: { xs: 32, md: 36 }, fontSize: '12px' }}>
+                  <MenuItem value="default">Programa</MenuItem>
                 </Select>
              </Box>
              

@@ -23,10 +23,10 @@ const StatCard: React.FC<StatCardProps> = ({
       sx={{ 
         flex: 1, 
         height: '100%',
-        minHeight: 130, 
+        minHeight: { xs: 100, md: 120 }, 
         backgroundColor: bgColor, 
-        borderRadius: '24px', 
-        p: 3, 
+        borderRadius: '20px', 
+        p: { xs: 2, md: 3 }, 
         border: 'none', 
         display: 'flex', 
         flexDirection: 'column', 
@@ -34,38 +34,39 @@ const StatCard: React.FC<StatCardProps> = ({
         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
-           transform: 'translateY(-4px)',
-           boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+           transform: 'translateY(-2px)',
+           boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
         }
       }}
     >
       {isLoading ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Skeleton variant="text" width="50%" />
-          <Skeleton variant="text" width="30%" height={40} />
+          <Skeleton variant="text" width="30%" height={30} />
         </Box>
       ) : (
         <>
           <Typography 
-            variant="body2" 
+            variant="caption" 
             sx={{ 
               fontWeight: 700, 
               color: textColor, 
-              opacity: 0.85, 
+              opacity: 0.8, 
               mb: 0.5,
               textTransform: 'uppercase',
-              letterSpacing: '0.025em'
+              letterSpacing: '0.05em',
+              fontSize: { xs: '10px', md: '11px' }
             }}
           >
             {title}
           </Typography>
           <Typography 
-            variant="h3" 
+            variant="h4" 
             sx={{ 
               fontWeight: 800, 
               color: textColor, 
-              fontSize: { xs: '1.75rem', md: '2.25rem' },
-              lineHeight: 1.1 
+              fontSize: { xs: '1.5rem', md: '2rem' },
+              lineHeight: 1 
             }}
           >
             {value}
