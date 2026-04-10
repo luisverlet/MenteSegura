@@ -1,0 +1,7 @@
+{
+  "common": {
+    "login": "Ingresar",
+    "dashboard": "Dashboard",
+    "logout": "Cerrar sesión"
+  }
+}
