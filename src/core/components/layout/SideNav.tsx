@@ -7,7 +7,8 @@ import {
   Monitor, 
   FileText, 
   Settings,
-  Power
+  Power,
+  UserPlus
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -28,7 +29,8 @@ const SideNav = () => {
   };
 
   const handleLogout = () => {
-    router.push('/login');
+    localStorage.removeItem('auth_token');
+    router.replace('/login');
   };
 
   return (
@@ -116,12 +118,15 @@ const SideNav = () => {
       }}>
         <Tooltip title="Configuración" placement="right">
           <IconButton
+            onClick={() => handleNavigate('/settings')}
             sx={{
               width: 44,
               height: 44,
               borderRadius: '12px',
-              color: '#64748B',
-              '&:hover': { backgroundColor: '#F1F5F9' }
+              backgroundColor: pathname.startsWith('/settings') ? '#4F8CFF' : 'transparent',
+              color: pathname.startsWith('/settings') ? '#FFFFFF' : '#64748B',
+              boxShadow: pathname.startsWith('/settings') ? '0 8px 12px -3px rgba(79, 140, 255, 0.4)' : 'none',
+              '&:hover': { backgroundColor: pathname.startsWith('/settings') ? '#4F8CFF' : '#F1F5F9' }
             }}
           >
             <Settings size={22} />

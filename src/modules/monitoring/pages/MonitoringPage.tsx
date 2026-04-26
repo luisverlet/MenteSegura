@@ -21,16 +21,6 @@ import { usePagination } from '@/core/hooks/usePagination';
 import { FilterState, Student } from '@/core/types';
 import * as styles from './monitoring.styles';
 
-// ─── Mock Data ────────────────────────────────────────────
-// TODO: replace with monitoringService.getStudents(filters)
-const MOCK_STUDENTS: Student[] = Array.from({ length: 45 }, (_, i) => ({
-  id: i + 1,
-  name: `Luis Alejandro Vergel ${i + 1}`,
-  code: i % 2 === 0 ? `0222013${1000 + i}` : `0111000${500 + i}`,
-  risk: `${(i * 7) % 100}%`,
-  date: `${(i % 28) + 1} - 03 - 2026`,
-}));
-
 const defaultFilters: FilterState = {
   name: '',
   code: '',
@@ -65,18 +55,52 @@ const buildColumns = (onViewDetail: (id: number) => void) => [
 // ═══════════════════════════════════════════════════════════
 // MONITORING PAGE
 // ═══════════════════════════════════════════════════════════
+import { formatRisk, toTitleCase } from '@/core/utils/formatters';
+
 const MonitoringPage = () => {
   const router = useRouter();
   const { pagination, handlePageChange, handleRowsPerPageChange, resetPage } = usePagination(10);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<FilterState>(defaultFilters);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchStudents = async () => {
+      const token = localStorage.getItem('auth_token');
+      try {
+        const res = await fetch('/api/proxy/evaluations', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const items = data.items || [];
+          
+          const mappedStudents = items.map((item: any) => ({
+            id: item.student_id,
+            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin Nombre'),
+            code: item.student_code || 'N/A',
+            risk: formatRisk(item.current_risk),
+            date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad'
+          }));
+          setStudents(mappedStudents);
+        }
+      } catch (error) {
+        console.error('Failed to fetch students', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const hasActiveFilters = Object.values(activeFilters).some((v) => v !== '');
   const columns = buildColumns((id) => router.push(`/monitoring/${id}`));
 
   // Client-side filter – swap for server-side when API is ready
-  const filteredData = MOCK_STUDENTS.filter((s) => {
+  const filteredData = students.filter((s) => {
     if (activeFilters.name && !s.name.toLowerCase().includes(activeFilters.name.toLowerCase())) return false;
     if (activeFilters.code && !s.code.includes(activeFilters.code)) return false;
     return true;

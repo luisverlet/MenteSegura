@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
       root: '.',
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/proxy/:path*',
+        destination: 'https://mentesegura.onrender.com/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

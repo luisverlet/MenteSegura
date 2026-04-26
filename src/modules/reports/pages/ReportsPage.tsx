@@ -89,13 +89,43 @@ const ExportCheckRow = ({
 // ═══════════════════════════════════════════════════════════
 // REPORTS PAGE
 // ═══════════════════════════════════════════════════════════
+import { formatRisk, toTitleCase } from '@/core/utils/formatters';
+
 const ReportsPage = () => {
   const { pagination, handlePageChange, handleRowsPerPageChange } = usePagination(10);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>(defaultExportOptions);
   const [isExporting, setIsExporting] = useState(false);
+  const [students, setStudents] = useState<any[]>([]);
 
-  const paginatedRows = MOCK_REPORTS.slice(
+  React.useEffect(() => {
+    const fetchStudents = async () => {
+      const token = localStorage.getItem('auth_token');
+      try {
+        const res = await fetch('/api/proxy/evaluations', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const items = data.items || [];
+          
+          const mappedStudents = items.map((item: any) => ({
+            id: item.student_id,
+            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin Nombre'),
+            code: item.student_code || 'N/A',
+            risk: formatRisk(item.current_risk),
+            date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad'
+          }));
+          setStudents(mappedStudents);
+        }
+      } catch (error) {
+        console.error('Failed to fetch students', error);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  const paginatedRows = students.slice(
     pagination.page * pagination.rowsPerPage,
     pagination.page * pagination.rowsPerPage + pagination.rowsPerPage
   );
@@ -107,12 +137,41 @@ const ReportsPage = () => {
   // Simulates export – swap with reportsService.exportReport(exportOptions) when backend is ready
   const handleExport = async () => {
     setIsExporting(true);
-    await new Promise((r) => setTimeout(r, 1000)); // simulate network delay
-    // TODO: const { downloadUrl } = await reportsService.exportReport(exportOptions);
-    // window.open(downloadUrl, '_blank');
-    console.info('[ReportsPage] Export triggered with options:', exportOptions);
-    setIsExporting(false);
-    setExportOpen(false);
+    const token = localStorage.getItem('auth_token');
+    try {
+      const res = await fetch('/api/proxy/reports/export?limit=100', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        // Assume the backend returns a blob (e.g. CSV or Excel)
+        // If it's a JSON with a URL, we'd handle it differently.
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          console.info('Export result JSON:', data);
+          // If the backend returned a JSON instead of a file, we could map it to CSV here
+          alert('Exportación completada. Revisa la consola si devolvió un JSON en lugar de un archivo.');
+        } else {
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `reporte_mentesegura_${new Date().toISOString().split('T')[0]}.csv`; // Or whatever format it is
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        }
+        setExportOpen(false);
+      } else {
+        alert('Error al exportar el reporte');
+      }
+    } catch (error) {
+      console.error('Export error', error);
+      alert('Error de conexión al exportar');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -151,7 +210,7 @@ const ReportsPage = () => {
             <GenericTable
               columns={columns}
               rows={paginatedRows}
-              totalRows={MOCK_REPORTS.length}
+              totalRows={students.length}
               page={pagination.page}
               rowsPerPage={pagination.rowsPerPage}
               onPageChange={handlePageChange}

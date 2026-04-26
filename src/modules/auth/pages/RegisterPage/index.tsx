@@ -23,7 +23,6 @@ import { useRouter } from 'next/navigation';
 const registerSchema = z.object({
   firstName: z.string().min(2, 'El nombre es obligatorio'),
   lastName: z.string().min(2, 'Los apellidos son obligatorios'),
-  usageKey: z.string().min(3, 'La llave de uso es requerida'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Mínimo 6 caracteres'),
   confirmPassword: z.string().min(6, 'Mínimo 6 caracteres'),
@@ -50,13 +49,33 @@ const RegisterPage = () => {
   });
 
   const handleNext = async () => {
-    const isStepValid = await trigger(['firstName', 'lastName', 'usageKey']);
+    const isStepValid = await trigger(['firstName', 'lastName']);
     if (isStepValid) setStep(2);
   };
 
-  const onSubmit = (data: RegisterForm) => {
-    console.log('Register data:', data);
-    router.push('/verify-email');
+  const onSubmit = async (data: RegisterForm) => {
+    try {
+      const response = await fetch('/api/proxy/register_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          password: data.password,
+          role_id: 2 // Using 2 for standard user, or whatever the backend expects
+        }),
+      });
+      if (response.ok) {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Registration failed', error);
+      alert('Error en el registro');
+    }
   };
 
   return (
@@ -107,24 +126,7 @@ const RegisterPage = () => {
                     }}
                   />
                 </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Llave de Uso
-                  </Typography>
-                  <TextField 
-                    {...register('usageKey')}
-                    placeholder="AKJ443"
-                    error={!!errors.usageKey}
-                    helperText={errors.usageKey?.message}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Box sx={styles.iconBoxStyles}><Key size={20} /></Box>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Box>
+
                 <Button 
                   variant="contained" 
                   fullWidth 
@@ -222,11 +224,9 @@ const RegisterPage = () => {
 
             <Typography variant="body2" sx={{ textAlign: 'center', mt: 4, fontWeight: 600, color: '#64748B' }}>
               ¿Ya tienes cuenta?{' '}
-              <NextLink href="/login" passHref legacyBehavior>
-                <Link sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
-                  Inicia sesión
-                </Link>
-              </NextLink>
+              <Link component={NextLink} href="/login" sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
+                Inicia sesión
+              </Link>
             </Typography>
           </form>
         </Box>

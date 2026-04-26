@@ -45,9 +45,31 @@ const LoginPage = () => {
     },
   });
 
-  const onSubmit = (data: LoginForm) => {
-    console.log('Login data:', data);
-    window.location.href = '/dashboard';
+  const onSubmit = async (data: LoginForm) => {
+    try {
+      const response = await fetch('/api/proxy/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password
+        }),
+      });
+      if (response.ok) {
+        const responseData = await response.json();
+        // You might want to save responseData.access_token to localStorage or a cookie here
+        if (responseData.access_token) {
+          localStorage.setItem('auth_token', responseData.access_token);
+        }
+        window.location.href = '/dashboard';
+      } else {
+        const errorData = await response.json();
+        alert(`Error de login: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Login failed', error);
+      alert('Error en el login');
+    }
   };
 
   return (
@@ -137,11 +159,9 @@ const LoginPage = () => {
                 control={<Checkbox {...register('rememberMe')} color="primary" />} 
                 label={<Typography variant="body2" sx={{ fontWeight: 600, color: '#64748B' }}>Remember me</Typography>} 
               />
-              <NextLink href="/forgot-password" passHref legacyBehavior>
-                <Link sx={{ fontWeight: 700, fontSize: '14px', color: '#4F8CFF', textDecoration: 'none' }}>
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </NextLink>
+              <Link component={NextLink} href="/forgot-password" sx={{ fontWeight: 700, fontSize: '14px', color: '#4F8CFF', textDecoration: 'none' }}>
+                ¿Olvidaste tu contraseña?
+              </Link>
             </Box>
 
             {/* Login Button */}
@@ -157,11 +177,9 @@ const LoginPage = () => {
             {/* Bottom Link */}
             <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, color: '#64748B', mt: 3 }}>
               No tienes cuenta?{' '}
-              <NextLink href="/register" passHref legacyBehavior>
-                <Link sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
-                  Crea una
-                </Link>
-              </NextLink>
+              <Link component={NextLink} href="/register" sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
+                Crea una
+              </Link>
             </Typography>
           </form>
         </Box>

@@ -14,14 +14,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Simple mock auth check
-    const checkAuth = async () => {
-      // simulate check
-      await new Promise(r => setTimeout(r, 500));
-      const auth = true; // Set to true for demo
+    const checkAuth = () => {
+      const token = localStorage.getItem('auth_token');
+      const auth = !!token;
       setIsAuthenticated(auth);
       
-      if (!auth && pathname !== '/login') {
+      if (!auth) {
         router.replace('/login');
       }
     };

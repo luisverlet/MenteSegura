@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, IconButton, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Typography, IconButton, useMediaQuery, useTheme, Breadcrumbs, Link as MuiLink } from '@mui/material';
 import SideNav from './SideNav';
-import { ListFilter, LucideIcon } from 'lucide-react';
+import { ListFilter, LucideIcon, ChevronRight } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import NextLink from 'next/link';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -12,6 +14,14 @@ interface DashboardLayoutProps {
   Icon?: LucideIcon;
   onRightActionClick?: () => void;
 }
+
+const pathMapping: Record<string, string> = {
+  dashboard: 'Dashboard',
+  monitoring: 'Monitoreo',
+  reports: 'Reportes',
+  settings: 'Configuración',
+  'dev-register': 'Registro Dev',
+};
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
   children, 
@@ -22,6 +32,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const pathname = usePathname() || '';
+  
+  const pathSegments = pathname.split('/').filter(p => p);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: 'transparent', flexDirection: { xs: 'column', md: 'row' } }}>
@@ -35,6 +48,31 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         display: 'flex', 
         flexDirection: 'column' 
       }}>
+        {/* Breadcrumbs */}
+        <Box sx={{ mb: 2 }}>
+          <Breadcrumbs separator={<ChevronRight size={14} color="#94A3B8" />} aria-label="breadcrumb">
+            <MuiLink component={NextLink} href="/dashboard" underline="hover" sx={{ color: '#64748B', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+              Home
+            </MuiLink>
+            {pathSegments.map((segment, index) => {
+              const isLast = index === pathSegments.length - 1;
+              const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
+              // Si el segmento es un número o id largo, podríamos decir "Detalle", si no, mapear
+              const label = pathMapping[segment] || (segment.length > 10 || !isNaN(Number(segment)) ? 'Detalle' : segment.charAt(0).toUpperCase() + segment.slice(1));
+              
+              return isLast ? (
+                <Typography key={href} sx={{ color: '#1E293B', fontSize: '13px', fontWeight: 800 }}>
+                  {label}
+                </Typography>
+              ) : (
+                <MuiLink key={href} component={NextLink} href={href} underline="hover" sx={{ color: '#64748B', fontSize: '13px', fontWeight: 600 }}>
+                  {label}
+                </MuiLink>
+              );
+            })}
+          </Breadcrumbs>
+        </Box>
+
         {/* Header Section */}
         <Box 
           sx={{ 

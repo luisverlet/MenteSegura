@@ -3,12 +3,14 @@
 import React, { useState, useRef } from 'react';
 import { Box, Typography, Button, TextField, Link } from '@mui/material';
 import * as styles from './verify-email.styles';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const VerifyEmailPage = () => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email') || '';
 
   const handleChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);
@@ -29,9 +31,47 @@ const VerifyEmailPage = () => {
     }
   };
 
-  const handleVerify = () => {
-    console.log('Verifying code:', code.join(''));
-    router.push('/dashboard');
+  const handleVerify = async () => {
+    try {
+      const response = await fetch('/api/proxy/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          verification_code: code.join('')
+        }),
+      });
+      if (response.ok) {
+        alert('Email verificado con éxito');
+        router.push('/login');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Verification failed', error);
+      alert('Error al verificar código');
+    }
+  };
+
+  const handleResend = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    try {
+      const response = await fetch('/api/proxy/resend-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (response.ok) {
+        alert('Código reenviado a tu correo');
+      } else {
+        const errorData = await response.json();
+        alert(`Error al reenviar: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Resend failed', error);
+    }
   };
 
   return (
@@ -83,7 +123,7 @@ const VerifyEmailPage = () => {
             Espera <span style={{ fontWeight: 700, color: '#1E293B' }}>30</span> segundos antes de reenviar
           </Typography>
           <Typography variant="body2" sx={{ mt: 1, fontWeight: 700 }}>
-            No llegó el codigo? <Link href="#" sx={{ color: '#4F8CFF', textDecoration: 'none' }}>Reenviar</Link>
+            No llegó el codigo? <Link href="#" onClick={handleResend} sx={{ color: '#4F8CFF', textDecoration: 'none' }}>Reenviar</Link>
           </Typography>
         </Box>
       </Box>
