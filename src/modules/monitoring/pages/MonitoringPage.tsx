@@ -15,7 +15,7 @@ import {
 import { Monitor, X, Search, ListFilter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
-import GenericTable from '@/core/components/table/GenericTable';
+import GenericTable from '@/core/components/Table/GenericTable';
 import GenericInput from '@/core/components/Input/GenericInput';
 import { usePagination } from '@/core/hooks/usePagination';
 import { FilterState, Student } from '@/core/types';

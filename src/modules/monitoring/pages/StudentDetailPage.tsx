@@ -18,7 +18,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
-import GenericTable from '@/core/components/table/GenericTable';
+import GenericTable from '@/core/components/Table/GenericTable';
 import * as styles from './student-detail.styles';
 
 const evolutionData = [

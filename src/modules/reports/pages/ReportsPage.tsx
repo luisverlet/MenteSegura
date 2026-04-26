@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { FileText, X, Download } from 'lucide-react';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
-import GenericTable from '@/core/components/table/GenericTable';
+import GenericTable from '@/core/components/Table/GenericTable';
 import GenericInput from '@/core/components/Input/GenericInput';
 import { usePagination } from '@/core/hooks/usePagination';
 import { ExportOptions } from '@/core/types';
