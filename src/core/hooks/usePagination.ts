@@ -19,7 +19,7 @@ export function usePagination(defaultRowsPerPage = 10) {
   }, []);
 
   const handleRowsPerPageChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setPagination({ page: 0, rowsPerPage: parseInt(e.target.value, 10) });
     },
     []

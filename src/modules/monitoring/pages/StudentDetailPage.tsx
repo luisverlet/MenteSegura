@@ -18,7 +18,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
-import GenericTable from '@/core/components/Table/GenericTable';
+import GenericTable from '@/core/components/table/GenericTable';
 import * as styles from './student-detail.styles';
 
 const evolutionData = [
@@ -131,9 +131,9 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
   );
 
   const historyColumns = [
-    { id: 'name' as const, label: 'Nombre', align: 'left' as const, minWidth: 200 },
-    { id: 'risk' as const, label: 'Nivel de riesgo', align: 'center' as const, minWidth: 150 },
-    { id: 'date' as const, label: 'Fecha de actividad', align: 'center' as const, minWidth: 180 },
+    { id: 'name' as any, label: 'Nombre', align: 'left' as const, minWidth: 200 },
+    { id: 'risk' as any, label: 'Nivel de riesgo', align: 'center' as const, minWidth: 150 },
+    { id: 'date' as any, label: 'Fecha de actividad', align: 'center' as const, minWidth: 180 },
   ];
 
   return (

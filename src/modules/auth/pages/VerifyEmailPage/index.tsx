@@ -88,7 +88,7 @@ const VerifyEmailPage = () => {
           {code.map((digit, index) => (
             <Box key={index} sx={styles.codeBoxStyles}>
               <input
-                ref={(el) => (inputs.current[index] = el)}
+                ref={(el) => { inputs.current[index] = el; }}
                 type="text"
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}

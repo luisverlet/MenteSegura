@@ -15,7 +15,7 @@ import {
 import { Monitor, X, Search, ListFilter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
-import GenericTable from '@/core/components/Table/GenericTable';
+import GenericTable from '@/core/components/table/GenericTable';
 import GenericInput from '@/core/components/Input/GenericInput';
 import { usePagination } from '@/core/hooks/usePagination';
 import { FilterState, Student } from '@/core/types';
@@ -209,10 +209,10 @@ const MonitoringPage = () => {
                 Rango de riesgo (Opcional)
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <GenericInput placeholder="0%" value={draftFilters.riskMin} onChange={(e) => setDraftFilters((p) => ({ ...p, riskMin: e.target.value }))} />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <GenericInput placeholder="100%" value={draftFilters.riskMax} onChange={(e) => setDraftFilters((p) => ({ ...p, riskMax: e.target.value }))} />
                 </Grid>
               </Grid>
