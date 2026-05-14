@@ -17,7 +17,7 @@ import {
   ListItemText,
   Divider
 } from '@mui/material';
-import { Settings, User, Shield, BookOpen, Plus } from 'lucide-react';
+import { Settings, User, Shield, BookOpen, Plus, Hammer } from 'lucide-react';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
@@ -104,28 +104,21 @@ export default function SettingsPage() {
         </Tabs>
 
         {activeTab === 0 && (
-          <Card sx={{ p: 4, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Configuración de Perfil</Typography>
-            <Alert severity="info" sx={{ mb: 4, borderRadius: '8px' }}>
-              Los endpoints GET /users/me y PUT /students/me aún no están disponibles en el backend. 
-              Esta sección estará funcional cuando se implementen.
-            </Alert>
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField label="Nombre" fullWidth disabled placeholder="Pendiente de API" />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField label="Apellidos" fullWidth disabled placeholder="Pendiente de API" />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField label="Correo Electrónico" fullWidth disabled placeholder="Pendiente de API" />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Button variant="contained" disabled sx={{ py: 1.5, fontWeight: 'bold' }}>
-                  Guardar Cambios
-                </Button>
-              </Grid>
-            </Grid>
+          <Card sx={{ p: 8, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <Box sx={{ p: 3, backgroundColor: '#FEF3C7', borderRadius: '50%', color: '#D97706' }}>
+                <Hammer size={48} />
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 900, color: '#1E293B' }}>
+                EN CONSTRUCCIÓN
+              </Typography>
+              <Typography sx={{ color: '#64748B', maxWidth: 450, mx: 'auto', fontSize: '18px', fontWeight: 500 }}>
+                Esta sección está siendo desarrollada. Pronto podrás gestionar toda tu información personal desde aquí.
+              </Typography>
+              <Alert severity="info" sx={{ mt: 2, borderRadius: '12px', fontWeight: 600 }}>
+                Los endpoints del backend para la gestión de perfil aún no están disponibles.
+              </Alert>
+            </Box>
           </Card>
         )}
 
@@ -134,14 +127,14 @@ export default function SettingsPage() {
             <Card sx={{ p: 4, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 800 }}>Herramientas de Desarrollo</Typography>
-                <Typography sx={{ color: '#64748B', fontSize: '14px' }}>Acceso rápido al simulador de estudiantes y evaluaciones (Solo Dev).</Typography>
+                <Typography sx={{ color: '#64748B', fontSize: '14px' }}>Acceso rápido al simulador de estudiantes y evaluaciones (Solo Desarrollo).</Typography>
               </Box>
               <Button 
                 variant="outlined" 
                 onClick={() => router.push('/dev-register')}
                 sx={{ borderRadius: '12px', fontWeight: 700, borderColor: '#E2E8F0', color: '#334155' }}
               >
-                Ir a Registro Estudiantes
+                Ir a Registro de Estudiantes
               </Button>
             </Card>
 

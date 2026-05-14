@@ -96,7 +96,7 @@ const RegisterPage = () => {
                   </Typography>
                   <TextField 
                     {...register('firstName')}
-                    placeholder="Luis Alejandro"
+                    placeholder="Juan"
                     error={!!errors.firstName}
                     helperText={errors.firstName?.message}
                     InputProps={{
@@ -114,7 +114,7 @@ const RegisterPage = () => {
                   </Typography>
                   <TextField 
                     {...register('lastName')}
-                    placeholder="Vergel Irlet"
+                    placeholder="Pérez"
                     error={!!errors.lastName}
                     helperText={errors.lastName?.message}
                     InputProps={{
@@ -142,11 +142,11 @@ const RegisterPage = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Email
+                    Correo Electrónico
                   </Typography>
                   <TextField 
                     {...register('email')}
-                    placeholder="example@gmail.com"
+                    placeholder="ejemplo@correo.com"
                     error={!!errors.email}
                     helperText={errors.email?.message}
                     InputProps={{
@@ -235,7 +235,7 @@ const RegisterPage = () => {
         <Box sx={styles.illustrationPanelStyles}>
           <Image 
             src="/assets/creation.svg" 
-            alt="Registration Illustration" 
+            alt="Ilustración de Registro" 
             width={550} 
             height={550} 
             priority 

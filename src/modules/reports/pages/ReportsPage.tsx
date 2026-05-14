@@ -13,7 +13,9 @@ import {
   Radio,
   RadioGroup,
   Stack,
-  Divider
+  Divider,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { FileText, X, Download } from 'lucide-react';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
@@ -21,15 +23,6 @@ import GenericTable from '@/core/components/Table/GenericTable';
 import GenericInput from '@/core/components/Input/GenericInput';
 import { usePagination } from '@/core/hooks/usePagination';
 import { ExportOptions } from '@/core/types';
-
-// ─── Mock Data ────────────────────────────────────────────
-const MOCK_REPORTS = Array.from({ length: 30 }, (_, i) => ({
-  id: i + 1,
-  name: `Luis Alejandro Vergel ${i + 1}`,
-  code: `0222013${1053 + i}`,
-  risk: `${20 + (i % 5) * 10}%`,
-  date: `${(i % 28) + 1} - 03 - 2026`,
-}));
 
 // ─── Default export options ───────────────────────────────
 const defaultExportOptions: ExportOptions = {
@@ -44,8 +37,8 @@ const defaultExportOptions: ExportOptions = {
 // ─── Column definitions ───────────────────────────────────
 const columns = [
   { id: 'name' as const, label: 'Nombre', align: 'left' as const, minWidth: 220 },
-  { id: 'code' as const, label: 'Codigo UDES', align: 'center' as const, minWidth: 150 },
-  { id: 'risk' as const, label: 'Ultimo nivel de riesgo', align: 'center' as const, minWidth: 180 },
+  { id: 'code' as const, label: 'Código UDES', align: 'center' as const, minWidth: 150 },
+  { id: 'risk' as const, label: 'Último nivel de riesgo', align: 'center' as const, minWidth: 180 },
   { id: 'date' as const, label: 'Fecha de última actividad', align: 'center' as const, minWidth: 200 },
 ];
 
@@ -97,6 +90,11 @@ const ReportsPage = () => {
   const [exportOptions, setExportOptions] = useState<ExportOptions>(defaultExportOptions);
   const [isExporting, setIsExporting] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  });
 
   React.useEffect(() => {
     const fetchStudents = async () => {
@@ -111,7 +109,7 @@ const ReportsPage = () => {
           
           const mappedStudents = items.map((item: any) => ({
             id: item.student_id,
-            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin Nombre'),
+            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin nombre'),
             code: item.student_code || 'N/A',
             risk: formatRisk(item.current_risk),
             date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad'
@@ -119,7 +117,7 @@ const ReportsPage = () => {
           setStudents(mappedStudents);
         }
       } catch (error) {
-        console.error('Failed to fetch students', error);
+        console.error('Error al obtener estudiantes', error);
       }
     };
     fetchStudents();
@@ -136,6 +134,20 @@ const ReportsPage = () => {
 
   // Simulates export – swap with reportsService.exportReport(exportOptions) when backend is ready
   const handleExport = async () => {
+    // Validate dates
+    if (exportOptions.startDate && exportOptions.endDate) {
+      const [sd, sm, sy] = exportOptions.startDate.split('/');
+      const [ed, em, ey] = exportOptions.endDate.split('/');
+      if (sd && sm && sy && ed && em && ey) {
+        const start = new Date(Number(sy), Number(sm) - 1, Number(sd));
+        const end = new Date(Number(ey), Number(em) - 1, Number(ed));
+        if (start > end) {
+          setSnackbar({ open: true, message: 'No hay datos para el rango especificado.', severity: 'error' });
+          return;
+        }
+      }
+    }
+
     setIsExporting(true);
     const token = localStorage.getItem('auth_token');
     try {
@@ -143,20 +155,17 @@ const ReportsPage = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
-        // Assume the backend returns a blob (e.g. CSV or Excel)
-        // If it's a JSON with a URL, we'd handle it differently.
         const contentType = res.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const data = await res.json();
           console.info('Export result JSON:', data);
-          // If the backend returned a JSON instead of a file, we could map it to CSV here
-          alert('Exportación completada. Revisa la consola si devolvió un JSON en lugar de un archivo.');
+          setSnackbar({ open: true, message: 'Exportación completada.', severity: 'success' });
         } else {
           const blob = await res.blob();
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `reporte_mentesegura_${new Date().toISOString().split('T')[0]}.csv`; // Or whatever format it is
+          a.download = `reporte_mentesegura_${new Date().toISOString().split('T')[0]}.csv`; 
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -164,14 +173,18 @@ const ReportsPage = () => {
         }
         setExportOpen(false);
       } else {
-        alert('Error al exportar el reporte');
+        setSnackbar({ open: true, message: 'Error al exportar el reporte', severity: 'error' });
       }
     } catch (error) {
-      console.error('Export error', error);
-      alert('Error de conexión al exportar');
+      console.error('Error en exportación', error);
+      setSnackbar({ open: true, message: 'Error de conexión al exportar', severity: 'error' });
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -248,7 +261,7 @@ const ReportsPage = () => {
 
         <Stack spacing={3}>
           <ExportCheckRow
-            label="Datos anonimos"
+            label="Datos anónimos"
             checked={exportOptions.anonymousData}
             onChange={(v) => setOption('anonymousData', v)}
           />
@@ -270,7 +283,7 @@ const ReportsPage = () => {
 
           <Box>
             <GenericInput
-              labelTitle="Fecha inicio"
+              labelTitle="Fecha de inicio"
               placeholder="DD/MM/AAAA"
               value={exportOptions.startDate}
               onChange={(e) => setOption('startDate', e.target.value)}
@@ -278,7 +291,7 @@ const ReportsPage = () => {
           </Box>
           <Box>
             <GenericInput
-              labelTitle="Fecha fin"
+              labelTitle="Fecha de fin"
               placeholder="DD/MM/AAAA"
               value={exportOptions.endDate}
               onChange={(e) => setOption('endDate', e.target.value)}
@@ -305,6 +318,12 @@ const ReportsPage = () => {
           </Button>
         </Box>
       </Drawer>
+
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

@@ -33,12 +33,12 @@ const defaultFilters: FilterState = {
 // ─── Column definitions ───────────────────────────────────
 const buildColumns = (onViewDetail: (id: number) => void) => [
   { id: 'name' as const, label: 'Nombre', align: 'left' as const, minWidth: 250 },
-  { id: 'code' as const, label: 'Codigo UDES', align: 'center' as const, minWidth: 150 },
-  { id: 'risk' as const, label: 'Ultimo nivel de riesgo', align: 'center' as const, minWidth: 180 },
+  { id: 'code' as const, label: 'Código UDES', align: 'center' as const, minWidth: 150 },
+  { id: 'risk' as const, label: 'Último nivel de riesgo', align: 'center' as const, minWidth: 180 },
   { id: 'date' as const, label: 'Fecha de última actividad', align: 'center' as const, minWidth: 200 },
   {
     id: 'actions' as const,
-    label: 'Accion',
+    label: 'Acción',
     align: 'center' as const,
     format: (_: unknown, row: Student) => (
       <Box
@@ -80,7 +80,7 @@ const MonitoringPage = () => {
           
           const mappedStudents = items.map((item: any) => ({
             id: item.student_id,
-            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin Nombre'),
+            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin nombre'),
             code: item.student_code || 'N/A',
             risk: formatRisk(item.current_risk),
             date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad'
@@ -88,7 +88,7 @@ const MonitoringPage = () => {
           setStudents(mappedStudents);
         }
       } catch (error) {
-        console.error('Failed to fetch students', error);
+        console.error('Error al obtener estudiantes', error);
       } finally {
         setIsLoading(false);
       }
@@ -126,7 +126,7 @@ const MonitoringPage = () => {
   return (
     <DashboardLayout
       title="Monitoreo Estudiantil"
-      subtitle="Busqueda y listado"
+      subtitle="Búsqueda y listado"
       Icon={Monitor}
       onRightActionClick={() => setIsFilterOpen(true)}
     >
@@ -199,8 +199,8 @@ const MonitoringPage = () => {
               }}
             />
             <GenericInput
-              labelTitle="Codigo"
-              placeholder="Buscar codigo"
+              labelTitle="Código"
+              placeholder="Buscar código"
               value={draftFilters.code}
               onChange={(e) => setDraftFilters((p) => ({ ...p, code: e.target.value }))}
             />
@@ -217,8 +217,8 @@ const MonitoringPage = () => {
                 </Grid>
               </Grid>
             </Box>
-            <GenericInput labelTitle="Fecha inicio" placeholder="DD/MM/AAAA" value={draftFilters.startDate} onChange={(e) => setDraftFilters((p) => ({ ...p, startDate: e.target.value }))} />
-            <GenericInput labelTitle="Fecha fin" placeholder="DD/MM/AAAA" value={draftFilters.endDate} onChange={(e) => setDraftFilters((p) => ({ ...p, endDate: e.target.value }))} />
+            <GenericInput labelTitle="Fecha de inicio" placeholder="DD/MM/AAAA" value={draftFilters.startDate} onChange={(e) => setDraftFilters((p) => ({ ...p, startDate: e.target.value }))} />
+            <GenericInput labelTitle="Fecha de fin" placeholder="DD/MM/AAAA" value={draftFilters.endDate} onChange={(e) => setDraftFilters((p) => ({ ...p, endDate: e.target.value }))} />
 
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
               <Button variant="outlined" fullWidth sx={{ height: 52, borderRadius: '12px', fontWeight: 700 }} onClick={clearFilters}>

@@ -19,30 +19,15 @@ import {
 } from 'recharts';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
 import GenericTable from '@/core/components/Table/GenericTable';
-import * as styles from './student-detail.styles';
-
-const evolutionData = [
-  { name: 'ENERO', value: 30 },
-  { name: 'FEBRERO', value: 45 },
-  { name: 'MARZO', value: 65 },
-  { name: 'ABRIL', value: 55 },
-  { name: 'MAYO', value: 85 },
-  { name: 'JUNIO', value: 35 },
-];
-
-const mockHistoryData = [
-  { id: 1, name: 'Luis Alejandro Vergel', risk: '32%', date: '02 - 03 - 2026' },
-  { id: 2, name: 'Luis Alejandro Vergel', risk: '32%', date: '02 - 03 - 2026' },
-  { id: 3, name: 'Luis Alejandro Vergel', risk: '32%', date: '02 - 03 - 2026' },
-  { id: 4, name: 'Luis Alejandro Vergel', risk: '32%', date: '02 - 03 - 2026' },
-];
-
+import { usePagination } from '@/core/hooks/usePagination';
 import { formatRisk, toTitleCase } from '@/core/utils/formatters';
+import * as styles from './student-detail.styles';
 
 const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
   const [view, setView] = useState<'detail' | 'history'>('detail');
   const [student, setStudent] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { pagination, handlePageChange, handleRowsPerPageChange } = usePagination(10);
 
   React.useEffect(() => {
     const fetchStudent = async () => {
@@ -111,7 +96,7 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
           }
         }
       } catch (error) {
-        console.error('Failed to fetch student', error);
+        console.error('Error al obtener estudiante', error);
       } finally {
         setIsLoading(false);
       }
@@ -138,8 +123,8 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
 
   return (
     <DashboardLayout 
-      title="Detalle estudiante" 
-      subtitle="Gestion individual" 
+      title="Detalle del estudiante" 
+      subtitle="Gestión individual" 
       Icon={Monitor}
     >
       <Box sx={{ 
@@ -162,8 +147,8 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
                   {/* Left Side: Info */}
                   <Box sx={{ flex: 1 }}>
                     <InfoItem label="Nombre" value={`${student.name || ''} ${student.last_name || ''}`} />
-                    <InfoItem label="Programa Academico" value={`Programa ID: ${student.program || 'N/A'}`} />
-                    <InfoItem label="Codigo" value={student.student_code || student.code || 'N/A'} />
+                    <InfoItem label="Programa Académico" value={`Programa ID: ${student.program || 'N/A'}`} />
+                    <InfoItem label="Código" value={student.student_code || student.code || 'N/A'} />
                     <InfoItem label="Correo institucional" value={student.email || 'N/A'} />
                     <InfoItem label="Contacto" value={student.contact || 'No disponible'} />
                   </Box>
@@ -189,32 +174,38 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
                     </Box>
 
                     <Box>
-                      <Typography sx={{ fontWeight: 800, fontSize: '15px', mb: 1 }}>Evolucion riesgo</Typography>
+                      <Typography sx={{ fontWeight: 800, fontSize: '15px', mb: 1 }}>Evolución del riesgo</Typography>
                       <Box sx={styles.areaChartContainerStyles}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={student.evolution || []} margin={{ top: 5, right: 5, left: -35, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#FB923C" stopOpacity={0.4}/>
-                                <stop offset="95%" stopColor="#FB923C" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <Area 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke="#FB923C" 
-                              strokeWidth={3}
-                              fill="url(#colorVal)" 
-                            />
-                            <XAxis 
-                              dataKey="name" 
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fontSize: 7, fontWeight: 800, fill: '#CBD5E1' }}
-                            />
-                            <YAxis axisLine={false} tickLine={false} hide />
-                          </AreaChart>
-                        </ResponsiveContainer>
+                        {student.evolution && student.evolution.length > 0 ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={student.evolution} margin={{ top: 5, right: 5, left: -35, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#FB923C" stopOpacity={0.4}/>
+                                  <stop offset="95%" stopColor="#FB923C" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <Area 
+                                type="monotone" 
+                                dataKey="value" 
+                                stroke="#FB923C" 
+                                strokeWidth={3}
+                                fill="url(#colorVal)" 
+                              />
+                              <XAxis 
+                                dataKey="name" 
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fontSize: 7, fontWeight: 800, fill: '#CBD5E1' }}
+                              />
+                              <YAxis axisLine={false} tickLine={false} hide />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                            <Typography sx={{ color: '#94A3B8', fontWeight: 600 }}>Sin datos</Typography>
+                          </Box>
+                        )}
                       </Box>
                     </Box>
                   </Box>
@@ -243,12 +234,15 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
                <Box sx={{ flex: 1, backgroundColor: '#FFF', borderRadius: '16px', overflow: 'hidden' }}>
                   <GenericTable 
                     columns={historyColumns} 
-                    rows={student?.history || []}
+                    rows={(student?.history || []).slice(
+                      pagination.page * pagination.rowsPerPage,
+                      pagination.page * pagination.rowsPerPage + pagination.rowsPerPage
+                    )}
                     totalRows={student?.history?.length || 0}
-                    page={0}
-                    rowsPerPage={10}
-                    onPageChange={() => {}}
-                    onRowsPerPageChange={() => {}}
+                    page={pagination.page}
+                    rowsPerPage={pagination.rowsPerPage}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleRowsPerPageChange}
                   />
                </Box>
             </Box>

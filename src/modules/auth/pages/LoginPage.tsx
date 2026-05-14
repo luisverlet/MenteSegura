@@ -13,7 +13,9 @@ import {
   FormControlLabel, 
   Link, 
   InputAdornment, 
-  IconButton 
+  IconButton,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -22,15 +24,15 @@ import * as z from 'zod';
 import * as styles from './login.styles';
 
 const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().min(1, 'El correo electrónico es obligatorio').email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  rememberMe: z.boolean().optional(),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = React.useState(false);
+  const [errorSnackbar, setErrorSnackbar] = React.useState<{open: boolean, message: string}>({ open: false, message: '' });
 
   const {
     register,
@@ -41,7 +43,6 @@ const LoginPage = () => {
     defaultValues: {
       email: '',
       password: '',
-      rememberMe: false,
     },
   });
 
@@ -57,19 +58,22 @@ const LoginPage = () => {
       });
       if (response.ok) {
         const responseData = await response.json();
-        // You might want to save responseData.access_token to localStorage or a cookie here
         if (responseData.access_token) {
           localStorage.setItem('auth_token', responseData.access_token);
         }
         window.location.href = '/dashboard';
       } else {
         const errorData = await response.json();
-        alert(`Error de login: ${JSON.stringify(errorData)}`);
+        setErrorSnackbar({ open: true, message: `Error de inicio de sesión: ${errorData.message || 'Credenciales inválidas'}` });
       }
     } catch (error) {
-      console.error('Login failed', error);
-      alert('Error en el login');
+      console.error('Error de inicio de sesión', error);
+      setErrorSnackbar({ open: true, message: 'Error en el inicio de sesión' });
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setErrorSnackbar({ ...errorSnackbar, open: false });
   };
 
   return (
@@ -79,7 +83,7 @@ const LoginPage = () => {
         <Box sx={styles.illustrationPanelStyles}>
           <Image 
             src="/assets/login.svg" 
-            alt="Login Illustration" 
+            alt="Ilustración de Inicio de Sesión" 
             width={550} 
             height={550} 
             priority 
@@ -104,11 +108,11 @@ const LoginPage = () => {
             {/* Email Field */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                Email
+                Correo Electrónico
               </Typography>
               <TextField 
                 {...register('email')}
-                placeholder="example@gmail.com"
+                placeholder="ejemplo@correo.com"
                 error={!!errors.email}
                 helperText={errors.email?.message}
                 InputProps={{
@@ -126,7 +130,7 @@ const LoginPage = () => {
             {/* Password Field */}
             <Box sx={{ mb: 2 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                Password
+                Contraseña
               </Typography>
               <TextField 
                 {...register('password')}
@@ -153,12 +157,8 @@ const LoginPage = () => {
               />
             </Box>
 
-            {/* Remember Me & Forgot Password */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-              <FormControlLabel 
-                control={<Checkbox {...register('rememberMe')} color="primary" />} 
-                label={<Typography variant="body2" sx={{ fontWeight: 600, color: '#64748B' }}>Remember me</Typography>} 
-              />
+            {/* Forgot Password */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 4 }}>
               <Link component={NextLink} href="/forgot-password" sx={{ fontWeight: 700, fontSize: '14px', color: '#4F8CFF', textDecoration: 'none' }}>
                 ¿Olvidaste tu contraseña?
               </Link>
@@ -171,12 +171,12 @@ const LoginPage = () => {
               fullWidth 
               sx={styles.loginButtonStyles}
             >
-              Login
+              Iniciar Sesión
             </Button>
 
             {/* Bottom Link */}
             <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, color: '#64748B', mt: 3 }}>
-              No tienes cuenta?{' '}
+              ¿No tienes cuenta?{' '}
               <Link component={NextLink} href="/register" sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
                 Crea una
               </Link>
@@ -184,6 +184,12 @@ const LoginPage = () => {
           </form>
         </Box>
       </Card>
+      
+      <Snackbar open={errorSnackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+          {errorSnackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

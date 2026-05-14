@@ -148,8 +148,8 @@ const DashboardPage = () => {
 
   return (
     <DashboardLayout 
-      title="Dashboard" 
-      subtitle="Vista y analisis" 
+      title="Tablero de Control" 
+      subtitle="Vista y análisis" 
       Icon={LayoutDashboard}
     >
       {/* Top Filter */}
@@ -201,9 +201,9 @@ const DashboardPage = () => {
         <Grid size={{ xs: 12, md: 5 }}>
           <Card sx={styles.chartCardStyles}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: { xs: 2.5, md: 4 }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1rem', md: '1.25rem' } }}>Distribucion de niveles de riesgo</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1rem', md: '1.25rem' } }}>Distribución de niveles de riesgo</Typography>
               <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', fontSize: '10px' }}>Programa academico</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', fontSize: '10px' }}>Programa académico</Typography>
                 <Select 
                   size="small" 
                   value={selectedProgram}

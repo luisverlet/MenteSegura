@@ -12,7 +12,9 @@ export const formatRisk = (risk: string | null | undefined): string => {
     'leve': 'Riesgo Leve',
     'moderado': 'Riesgo Moderado',
     'moderado_fuerte': 'Riesgo Moderado-Fuerte',
-    'fuerte': 'Riesgo Fuerte'
+    'fuerte': 'Riesgo Fuerte',
+    'moderadamente_severo': 'Riesgo Moderadamente Severo',
+    'severo': 'Riesgo Severo'
   };
 
   const normalized = risk.toLowerCase().trim();

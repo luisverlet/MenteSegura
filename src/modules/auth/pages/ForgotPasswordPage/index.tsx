@@ -10,7 +10,9 @@ import {
   TextField, 
   Button, 
   InputAdornment, 
-  Link 
+  Link,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Mail, Key } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -20,7 +22,7 @@ import * as styles from './forgot-password.styles';
 import { useRouter } from 'next/navigation';
 
 const forgotSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().min(1, 'El correo electrónico es obligatorio').email('Email inválido'),
   recoveryCode: z.string().optional(),
 });
 
@@ -30,6 +32,8 @@ const ForgotPasswordPage = () => {
   const [step, setStep] = useState(1);
   const router = useRouter();
 
+  const [errorSnackbar, setErrorSnackbar] = useState({ open: false, message: '' });
+
   const {
     register,
     handleSubmit,
@@ -38,14 +42,33 @@ const ForgotPasswordPage = () => {
     resolver: zodResolver(forgotSchema),
   });
 
-  const onSubmit = (data: ForgotForm) => {
+  const onSubmit = async (data: ForgotForm) => {
     if (step === 1) {
-      console.log('Requesting recovery for:', data.email);
-      setStep(2);
+      try {
+        // Mocking API call for email validation.
+        const response = await fetch('/api/proxy/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: data.email }),
+        });
+        
+        if (response.ok) {
+          setStep(2);
+        } else {
+          // Si el correo no existe en la base de datos (Error lógico)
+          setErrorSnackbar({ open: true, message: 'El correo ingresado no existe en nuestro sistema o ocurrió un error.' });
+        }
+      } catch (error) {
+        setErrorSnackbar({ open: true, message: 'Error de conexión al enviar la solicitud.' });
+      }
     } else {
       console.log('Restoring with code:', data.recoveryCode);
       router.push('/login');
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setErrorSnackbar({ ...errorSnackbar, open: false });
   };
 
   return (
@@ -70,11 +93,11 @@ const ForgotPasswordPage = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                  Email
+                  Correo Electrónico
                 </Typography>
                 <TextField 
                   {...register('email')}
-                  placeholder="example@gmail.com"
+                  placeholder="ejemplo@correo.com"
                   error={!!errors.email}
                   helperText={errors.email?.message}
                   disabled={step === 2}
@@ -91,7 +114,7 @@ const ForgotPasswordPage = () => {
               {step === 2 && (
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Codigo de Email
+                    Código de Correo
                   </Typography>
                   <TextField 
                     {...register('recoveryCode')}
@@ -121,7 +144,7 @@ const ForgotPasswordPage = () => {
               <Typography variant="body2" sx={{ textAlign: 'center', mt: 2 }}>
                 <NextLink href="/login" passHref legacyBehavior>
                   <Link sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 700 }}>
-                    Volver al Login
+                    Volver al inicio de sesión
                   </Link>
                 </NextLink>
               </Typography>
@@ -133,13 +156,19 @@ const ForgotPasswordPage = () => {
         <Box sx={styles.illustrationPanelStyles}>
           <Image 
             src="/assets/Recovery.svg" 
-            alt="Recovery Illustration" 
+            alt="Ilustración de Recuperación" 
             width={550} 
             height={550} 
             priority 
           />
         </Box>
       </Card>
+
+      <Snackbar open={errorSnackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+          {errorSnackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -13,7 +13,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 
 const menuItems = [
-  { id: 'dashboard', icon: LayoutDashboard, path: '/dashboard', label: 'Dashboard' },
+  { id: 'dashboard', icon: LayoutDashboard, path: '/dashboard', label: 'Tablero' },
   { id: 'monitor', icon: Monitor, path: '/monitoring', label: 'Monitoreo' },
   { id: 'reports', icon: FileText, path: '/reports', label: 'Reportes' },
 ];

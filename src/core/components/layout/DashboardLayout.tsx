@@ -16,7 +16,7 @@ interface DashboardLayoutProps {
 }
 
 const pathMapping: Record<string, string> = {
-  dashboard: 'Dashboard',
+  dashboard: 'Tablero',
   monitoring: 'Monitoreo',
   reports: 'Reportes',
   settings: 'Configuración',
@@ -52,7 +52,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <Box sx={{ mb: 2 }}>
           <Breadcrumbs separator={<ChevronRight size={14} color="#94A3B8" />} aria-label="breadcrumb">
             <MuiLink component={NextLink} href="/dashboard" underline="hover" sx={{ color: '#64748B', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-              Home
+              Inicio
             </MuiLink>
             {pathSegments.map((segment, index) => {
               const isLast = index === pathSegments.length - 1;
@@ -156,7 +156,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         {/* Global Footer Message */}
         <Box sx={{ mt: 'auto', pt: 6, pb: 3, textAlign: 'center' }}>
           <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: { xs: '9px', md: '11px' }, px: 2, display: 'block' }}>
-            Todos los datos aqui registrados unicamente pueden ser visualizados por el personal competente de la universidad de Santander.
+            Todos los datos aquí registrados únicamente pueden ser visualizados por el personal competente de la universidad de Santander.
           </Typography>
         </Box>
       </Box>

@@ -81,7 +81,7 @@ const VerifyEmailPage = () => {
           Verificar correo electrónico
         </Typography>
         <Typography variant="body1" sx={{ color: '#64748B', mb: 4 }}>
-          Ingresa el codigo enviado a tu correo
+          Ingresa el código enviado a tu correo
         </Typography>
 
         <Box sx={styles.codeInputContainerStyles}>
@@ -115,7 +115,7 @@ const VerifyEmailPage = () => {
           onClick={handleVerify}
           disabled={code.some(d => !d)}
         >
-          Verificar codigo
+          Verificar código
         </Button>
 
         <Box sx={{ mt: 4 }}>
@@ -123,7 +123,7 @@ const VerifyEmailPage = () => {
             Espera <span style={{ fontWeight: 700, color: '#1E293B' }}>30</span> segundos antes de reenviar
           </Typography>
           <Typography variant="body2" sx={{ mt: 1, fontWeight: 700 }}>
-            No llegó el codigo? <Link href="#" onClick={handleResend} sx={{ color: '#4F8CFF', textDecoration: 'none' }}>Reenviar</Link>
+            ¿No llegó el código? <Link href="#" onClick={handleResend} sx={{ color: '#4F8CFF', textDecoration: 'none' }}>Reenviar</Link>
           </Typography>
         </Box>
       </Box>
