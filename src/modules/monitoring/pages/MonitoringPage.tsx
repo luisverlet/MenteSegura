@@ -5,12 +5,13 @@ import {
   Box,
   Typography,
   Card,
-  Link,
   Drawer,
   Button,
   IconButton,
   Grid,
   InputAdornment,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { Monitor, X, Search, ListFilter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -20,6 +21,9 @@ import GenericInput from '@/core/components/Input/GenericInput';
 import { usePagination } from '@/core/hooks/usePagination';
 import { FilterState, Student } from '@/core/types';
 import * as styles from './monitoring.styles';
+import { combineRisks, formatRisk, toTitleCase } from '@/core/utils/formatters';
+import { fetchWithRetry } from '@/core/utils/network';
+import { buildNetworkError, buildRequestError } from '@/core/utils/request-feedback';
 
 const defaultFilters: FilterState = {
   name: '',
@@ -30,32 +34,22 @@ const defaultFilters: FilterState = {
   endDate: '',
 };
 
-// ─── Column definitions ───────────────────────────────────
 const buildColumns = (onViewDetail: (id: number) => void) => [
   { id: 'name' as const, label: 'Nombre', align: 'left' as const, minWidth: 250 },
-  { id: 'code' as const, label: 'Código UDES', align: 'center' as const, minWidth: 150 },
-  { id: 'risk' as const, label: 'Último nivel de riesgo', align: 'center' as const, minWidth: 180 },
-  { id: 'date' as const, label: 'Fecha de última actividad', align: 'center' as const, minWidth: 200 },
+  { id: 'code' as const, label: 'Codigo UDES', align: 'center' as const, minWidth: 150 },
+  { id: 'risk' as const, label: 'Ultimo nivel de riesgo', align: 'center' as const, minWidth: 180 },
+  { id: 'date' as const, label: 'Fecha de ultima actividad', align: 'center' as const, minWidth: 200 },
   {
     id: 'actions' as const,
-    label: 'Acción',
+    label: 'Accion',
     align: 'center' as const,
     format: (_: unknown, row: Student) => (
-      <Box
-        component="span"
-        onClick={() => onViewDetail(row.id)}
-        sx={{ ...styles.detailLinkStyles, cursor: 'pointer' }}
-      >
+      <Box component="span" onClick={() => onViewDetail(row.id)} sx={{ ...styles.detailLinkStyles, cursor: 'pointer' }}>
         Ver Detalle
       </Box>
     ),
   },
 ];
-
-// ═══════════════════════════════════════════════════════════
-// MONITORING PAGE
-// ═══════════════════════════════════════════════════════════
-import { formatRisk, toTitleCase } from '@/core/utils/formatters';
 
 const MonitoringPage = () => {
   const router = useRouter();
@@ -65,30 +59,76 @@ const MonitoringPage = () => {
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'warning' }>({
+    open: false,
+    message: '',
+    severity: 'error',
+  });
 
   React.useEffect(() => {
     const fetchStudents = async () => {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setPageError('No encontramos una sesion activa para consultar el monitoreo.');
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const res = await fetch('/api/proxy/evaluations', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const res = await fetchWithRetry('/api/proxy/evaluations', {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (res.ok) {
           const data = await res.json();
           const items = data.items || [];
-          
-          const mappedStudents = items.map((item: any) => ({
-            id: item.student_id,
-            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin nombre'),
-            code: item.student_code || 'N/A',
-            risk: formatRisk(item.current_risk),
-            date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad'
-          }));
+
+          const detailEntries = await Promise.all(
+            items.map(async (item: any) => {
+              try {
+                const detailRes = await fetchWithRetry(`/api/proxy/students/${item.student_id}/evaluations`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (!detailRes.ok) {
+                  return null;
+                }
+
+                return await detailRes.json();
+              } catch {
+                return null;
+              }
+            })
+          );
+
+          const mappedStudents = items.map((item: any, index: number) => {
+            const detail = detailEntries[index];
+            const phqRisk =
+              detail?.latest_phq9?.risk ||
+              detail?.latest_phq9?.classification ||
+              detail?.phq_risk;
+            const gadRisk =
+              detail?.latest_gad7?.risk ||
+              detail?.latest_gad7?.classification ||
+              detail?.gad_risk ||
+              detail?.anxiety_risk;
+
+            return {
+              id: item.student_id,
+              name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin nombre'),
+              code: item.student_code || 'N/A',
+              risk: combineRisks(phqRisk, gadRisk, item.current_risk),
+              date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad'
+            };
+          });
           setStudents(mappedStudents);
+        } else {
+          setPageError(await buildRequestError(res, 'No pudimos cargar los estudiantes para monitoreo.'));
         }
       } catch (error) {
         console.error('Error al obtener estudiantes', error);
+        setPageError(buildNetworkError('los estudiantes de monitoreo'));
       } finally {
         setIsLoading(false);
       }
@@ -99,10 +139,9 @@ const MonitoringPage = () => {
   const hasActiveFilters = Object.values(activeFilters).some((v) => v !== '');
   const columns = buildColumns((id) => router.push(`/monitoring/${id}`));
 
-  // Client-side filter – swap for server-side when API is ready
-  const filteredData = students.filter((s) => {
-    if (activeFilters.name && !s.name.toLowerCase().includes(activeFilters.name.toLowerCase())) return false;
-    if (activeFilters.code && !s.code.includes(activeFilters.code)) return false;
+  const filteredData = students.filter((student) => {
+    if (activeFilters.name && !student.name.toLowerCase().includes(activeFilters.name.toLowerCase())) return false;
+    if (activeFilters.code && !student.code.includes(activeFilters.code)) return false;
     return true;
   });
 
@@ -126,12 +165,22 @@ const MonitoringPage = () => {
   return (
     <DashboardLayout
       title="Monitoreo Estudiantil"
-      subtitle="Búsqueda y listado"
+      subtitle="Busqueda y listado"
       Icon={Monitor}
       onRightActionClick={() => setIsFilterOpen(true)}
     >
       <Box sx={styles.pageWrapperStyles}>
-        {/* Desktop filter button */}
+        {pageError && (
+          <Card sx={{ p: 3, borderRadius: '20px', border: '1px solid #FECACA', backgroundColor: '#FFF5F5', boxShadow: 'none', mb: 3 }}>
+            <Typography sx={{ fontWeight: 800, color: '#B91C1C', mb: 0.7 }}>
+              No pudimos cargar completamente el monitoreo
+            </Typography>
+            <Typography sx={{ color: '#7F1D1D', fontWeight: 600, fontSize: '14px' }}>
+              {pageError}
+            </Typography>
+          </Card>
+        )}
+
         <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-end', mb: 3 }}>
           <Button
             variant="outlined"
@@ -153,16 +202,7 @@ const MonitoringPage = () => {
           </Button>
         </Box>
 
-        {/* Data table */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
-            justifyContent: filteredData.length < 5 ? 'center' : 'flex-start',
-            pb: 4,
-          }}
-        >
+        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: filteredData.length < 5 ? 'center' : 'flex-start', pb: 4 }}>
           <Card sx={{ ...styles.tableCardStyles, backgroundColor: '#FFF !important' }}>
             <GenericTable
               columns={columns}
@@ -172,17 +212,12 @@ const MonitoringPage = () => {
               rowsPerPage={pagination.rowsPerPage}
               onPageChange={handlePageChange}
               onRowsPerPageChange={handleRowsPerPageChange}
+              isLoading={isLoading}
             />
           </Card>
         </Box>
 
-        {/* Filter Drawer */}
-        <Drawer
-          anchor="right"
-          open={isFilterOpen}
-          onClose={() => setIsFilterOpen(false)}
-          PaperProps={{ sx: styles.drawerPaperStyles }}
-        >
+        <Drawer anchor="right" open={isFilterOpen} onClose={() => setIsFilterOpen(false)} PaperProps={{ sx: styles.drawerPaperStyles }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
             <Typography variant="h5" sx={{ fontWeight: 800 }}>Filtros Avanzados</Typography>
             <IconButton onClick={() => setIsFilterOpen(false)}><X size={24} /></IconButton>
@@ -194,13 +229,11 @@ const MonitoringPage = () => {
               placeholder="Buscar Nombre"
               value={draftFilters.name}
               onChange={(e) => setDraftFilters((p) => ({ ...p, name: e.target.value }))}
-              InputProps={{
-                endAdornment: <InputAdornment position="end"><Search size={18} /></InputAdornment>,
-              }}
+              InputProps={{ endAdornment: <InputAdornment position="end"><Search size={18} /></InputAdornment> }}
             />
             <GenericInput
-              labelTitle="Código"
-              placeholder="Buscar código"
+              labelTitle="Codigo"
+              placeholder="Buscar codigo"
               value={draftFilters.code}
               onChange={(e) => setDraftFilters((p) => ({ ...p, code: e.target.value }))}
             />
@@ -231,6 +264,17 @@ const MonitoringPage = () => {
           </Box>
         </Drawer>
       </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbar((current) => ({ ...current, open: false }))} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

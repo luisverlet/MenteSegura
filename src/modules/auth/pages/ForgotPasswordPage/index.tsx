@@ -3,104 +3,188 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { 
-  Box, 
-  Typography, 
-  Card, 
-  TextField, 
-  Button, 
-  InputAdornment, 
+import {
+  Box,
+  Typography,
+  Card,
+  TextField,
+  Button,
+  InputAdornment,
   Link,
   Snackbar,
-  Alert
+  Alert,
 } from '@mui/material';
-import { Mail, Key } from 'lucide-react';
+import { Mail, Key, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import * as styles from './forgot-password.styles';
 import { useRouter } from 'next/navigation';
+import { extractAuthError, mapAuthNetworkError } from '@/modules/auth/utils/auth-feedback';
 
 const forgotSchema = z.object({
-  email: z.string().min(1, 'El correo electrónico es obligatorio').email('Email inválido'),
+  email: z.string().min(1, 'El correo electronico es obligatorio').email('Email invalido'),
   recoveryCode: z.string().optional(),
+  newPassword: z.string().optional(),
+  confirmPassword: z.string().optional(),
 });
 
 type ForgotForm = z.infer<typeof forgotSchema>;
 
 const ForgotPasswordPage = () => {
-  const [step, setStep] = useState(1);
-  const router = useRouter();
-
+  const [step, setStep] = useState<1 | 2>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [errorSnackbar, setErrorSnackbar] = useState({ open: false, message: '' });
+  const [successSnackbar, setSuccessSnackbar] = useState({ open: false, message: '' });
+  const router = useRouter();
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<ForgotForm>({
     resolver: zodResolver(forgotSchema),
+    defaultValues: {
+      email: '',
+      recoveryCode: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
   });
 
   const onSubmit = async (data: ForgotForm) => {
-    if (step === 1) {
-      try {
-        // Mocking API call for email validation.
+    setIsSubmitting(true);
+
+    try {
+      if (step === 1) {
         const response = await fetch('/api/proxy/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: data.email }),
         });
-        
+
         if (response.ok) {
           setStep(2);
-        } else {
-          // Si el correo no existe en la base de datos (Error lógico)
-          setErrorSnackbar({ open: true, message: 'El correo ingresado no existe en nuestro sistema o ocurrió un error.' });
+          setSuccessSnackbar({ open: true, message: 'Enviamos un codigo de recuperacion a tu correo.' });
+          return;
         }
-      } catch (error) {
-        setErrorSnackbar({ open: true, message: 'Error de conexión al enviar la solicitud.' });
+
+        const { userMessage } = await extractAuthError(response);
+        setErrorSnackbar({ open: true, message: userMessage });
+        return;
       }
-    } else {
-      console.log('Restoring with code:', data.recoveryCode);
-      router.push('/login');
+
+      if (!data.recoveryCode?.trim()) {
+        setErrorSnackbar({ open: true, message: 'Ingresa el codigo de recuperacion.' });
+        return;
+      }
+
+      if (!data.newPassword || data.newPassword.length < 6) {
+        setErrorSnackbar({ open: true, message: 'La nueva contrasena debe tener al menos 6 caracteres.' });
+        return;
+      }
+
+      if (data.newPassword !== data.confirmPassword) {
+        setErrorSnackbar({ open: true, message: 'La confirmacion de la nueva contrasena no coincide.' });
+        return;
+      }
+
+      const response = await fetch('/api/proxy/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          reset_code: data.recoveryCode,
+          new_password: data.newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        setSuccessSnackbar({ open: true, message: 'Tu contrasena fue restablecida correctamente.' });
+        setTimeout(() => {
+          router.push('/login');
+        }, 1200);
+        return;
+      }
+
+      const { userMessage } = await extractAuthError(response);
+      setErrorSnackbar({ open: true, message: userMessage });
+    } catch (error) {
+      console.error('Forgot/reset password failed', error);
+      setErrorSnackbar({
+        open: true,
+        message: step === 1 ? mapAuthNetworkError('forgot-password') : mapAuthNetworkError('reset-password'),
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setErrorSnackbar({ ...errorSnackbar, open: false });
+  const handleResendCode = async () => {
+    const email = getValues('email');
+    if (!email) {
+      setErrorSnackbar({ open: true, message: 'Ingresa tu correo antes de reenviar el codigo.' });
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      const response = await fetch('/api/proxy/resend-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        setSuccessSnackbar({ open: true, message: 'Reenviamos el codigo a tu correo.' });
+        return;
+      }
+
+      const { userMessage } = await extractAuthError(response);
+      setErrorSnackbar({ open: true, message: userMessage });
+    } catch (error) {
+      console.error('Resend code failed', error);
+      setErrorSnackbar({ open: true, message: mapAuthNetworkError('resend-code') });
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleCloseErrorSnackbar = () => {
+    setErrorSnackbar((current) => ({ ...current, open: false }));
+  };
+
+  const handleCloseSuccessSnackbar = () => {
+    setSuccessSnackbar((current) => ({ ...current, open: false }));
   };
 
   return (
     <Box sx={styles.pageWrapperStyles}>
       <Card sx={styles.forgotCardStyles}>
-        {/* Form Side */}
         <Box sx={styles.formPanelStyles}>
-          <Typography 
-            variant="h5" 
-            sx={{ fontWeight: 800, textAlign: 'center', mb: 1, color: '#1E293B' }}
-          >
-            Recuperar Contraseña
+          <Typography variant="h5" sx={{ fontWeight: 800, textAlign: 'center', mb: 1, color: '#1E293B' }}>
+            Recuperar contrasena
           </Typography>
-          <Typography 
-            variant="body2" 
-            sx={{ textAlign: 'center', color: '#64748B', mb: 4, px: 2 }}
-          >
-            Ingresa tu correo electronico para restablecer la contraseña
+          <Typography variant="body2" sx={{ textAlign: 'center', color: '#64748B', mb: 4, px: 2 }}>
+            {step === 1
+              ? 'Ingresa tu correo electronico para recibir un codigo de recuperacion.'
+              : 'Ingresa el codigo recibido y define tu nueva contrasena.'}
           </Typography>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                  Correo Electrónico
+                  Correo electronico
                 </Typography>
-                <TextField 
+                <TextField
                   {...register('email')}
                   placeholder="ejemplo@correo.com"
                   error={!!errors.email}
                   helperText={errors.email?.message}
-                  disabled={step === 2}
+                  disabled={step === 2 || isSubmitting}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -112,39 +196,98 @@ const ForgotPasswordPage = () => {
               </Box>
 
               {step === 2 && (
-                <Box>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Código de Correo
-                  </Typography>
-                  <TextField 
-                    {...register('recoveryCode')}
-                    placeholder="AKJ443"
-                    error={!!errors.recoveryCode}
-                    helperText={errors.recoveryCode?.message}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Box sx={styles.iconBoxStyles}><Key size={20} /></Box>
-                        </InputAdornment>
-                      ),
+                <>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
+                      Codigo de recuperacion
+                    </Typography>
+                    <TextField
+                      {...register('recoveryCode')}
+                      placeholder="AKJ443"
+                      error={!!errors.recoveryCode}
+                      helperText={errors.recoveryCode?.message}
+                      disabled={isSubmitting}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Box sx={styles.iconBoxStyles}><Key size={20} /></Box>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Box>
+
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
+                      Nueva contrasena
+                    </Typography>
+                    <TextField
+                      {...register('newPassword')}
+                      type="password"
+                      placeholder="Minimo 6 caracteres"
+                      error={!!errors.newPassword}
+                      helperText={errors.newPassword?.message}
+                      disabled={isSubmitting}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Box sx={styles.iconBoxStyles}><Lock size={20} /></Box>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Box>
+
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
+                      Confirmar nueva contrasena
+                    </Typography>
+                    <TextField
+                      {...register('confirmPassword')}
+                      type="password"
+                      placeholder="Repite tu nueva contrasena"
+                      error={!!errors.confirmPassword}
+                      helperText={errors.confirmPassword?.message}
+                      disabled={isSubmitting}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Box sx={styles.iconBoxStyles}><Lock size={20} /></Box>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Box>
+
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    fullWidth
+                    disabled={isResending || isSubmitting}
+                    onClick={handleResendCode}
+                    sx={{
+                      height: 52,
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      borderColor: '#D6E4FF',
+                      color: '#4F8CFF',
                     }}
-                  />
-                </Box>
+                  >
+                    {isResending ? 'Reenviando...' : 'Reenviar codigo'}
+                  </Button>
+                </>
               )}
 
-              <Button 
-                type="submit"
-                variant="contained" 
-                fullWidth 
-                sx={styles.buttonStyles}
-              >
-                {step === 1 ? 'Recuperar' : 'Restablecer'}
+              <Button type="submit" variant="contained" fullWidth disabled={isSubmitting} sx={styles.buttonStyles}>
+                {isSubmitting ? 'Procesando...' : step === 1 ? 'Enviar codigo' : 'Restablecer contrasena'}
               </Button>
 
               <Typography variant="body2" sx={{ textAlign: 'center', mt: 2 }}>
                 <NextLink href="/login" passHref legacyBehavior>
                   <Link sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 700 }}>
-                    Volver al inicio de sesión
+                    Volver al inicio de sesion
                   </Link>
                 </NextLink>
               </Typography>
@@ -152,21 +295,26 @@ const ForgotPasswordPage = () => {
           </form>
         </Box>
 
-        {/* Illustration Side */}
         <Box sx={styles.illustrationPanelStyles}>
-          <Image 
-            src="/assets/Recovery.svg" 
-            alt="Ilustración de Recuperación" 
-            width={550} 
-            height={550} 
-            priority 
+          <Image
+            src="/assets/Recovery.svg"
+            alt="Ilustracion de recuperacion"
+            width={550}
+            height={550}
+            priority
           />
         </Box>
       </Card>
 
-      <Snackbar open={errorSnackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+      <Snackbar open={errorSnackbar.open} autoHideDuration={6000} onClose={handleCloseErrorSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={handleCloseErrorSnackbar} severity="error" sx={{ width: '100%' }}>
           {errorSnackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar open={successSnackbar.open} autoHideDuration={5000} onClose={handleCloseSuccessSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={handleCloseSuccessSnackbar} severity="success" sx={{ width: '100%' }}>
+          {successSnackbar.message}
         </Alert>
       </Snackbar>
     </Box>

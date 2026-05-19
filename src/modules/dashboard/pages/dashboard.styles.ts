@@ -5,9 +5,17 @@ export const containerStyles: SxProps<Theme> = {
 };
 
 export const filterBoxStyles: SxProps<Theme> = {
-  display: 'flex', 
-  justifyContent: 'flex-end', 
+  display: 'flex',
+  justifyContent: 'flex-end',
   mb: { xs: 2, md: 3 }
+};
+
+export const drawerPaperStyles: SxProps<Theme> = {
+  width: { xs: '100%', sm: 430 },
+  p: 4,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 3
 };
 
 export const chartCardStyles: SxProps<Theme> = {
@@ -16,6 +24,14 @@ export const chartCardStyles: SxProps<Theme> = {
   border: '1px solid #E2E8F0', 
   borderRadius: '24px',
   boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+};
+
+export const errorCardStyles: SxProps<Theme> = {
+  p: 3,
+  borderRadius: '20px',
+  border: '1px solid #FECACA',
+  backgroundColor: '#FFF5F5',
+  boxShadow: 'none'
 };
 
 export const pieChartContainerStyles: SxProps<Theme> = {

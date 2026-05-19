@@ -2,19 +2,20 @@
 
 import React from 'react';
 import { Box, Tooltip, IconButton, useMediaQuery, useTheme } from '@mui/material';
-import { 
-  LayoutDashboard, 
-  Monitor, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Monitor,
+  FileText,
+  CalendarDays,
   Settings,
   Power,
-  UserPlus
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 const menuItems = [
   { id: 'dashboard', icon: LayoutDashboard, path: '/dashboard', label: 'Tablero' },
   { id: 'monitor', icon: Monitor, path: '/monitoring', label: 'Monitoreo' },
+  { id: 'appointments', icon: CalendarDays, path: '/appointments', label: 'Citas' },
   { id: 'reports', icon: FileText, path: '/reports', label: 'Reportes' },
 ];
 
@@ -53,9 +54,8 @@ const SideNav = () => {
         zIndex: 1201,
       }}
     >
-      {/* Logout at top (Desktop) or Left (Mobile) */}
       <Box sx={{ order: { xs: 1, md: 0 }, mb: { xs: 0, md: 4 }, ml: { xs: 1, md: 0 } }}>
-        <Tooltip title="Cerrar Sesión" placement="right">
+        <Tooltip title="Cerrar sesion" placement="right">
           <IconButton
             onClick={handleLogout}
             sx={{
@@ -71,20 +71,21 @@ const SideNav = () => {
         </Tooltip>
       </Box>
 
-      {/* Main Items - Centered */}
-      <Box sx={{ 
-        order: { xs: 2, md: 0 },
-        display: 'flex', 
-        flexDirection: { xs: 'row', md: 'column' }, 
-        gap: { xs: 1, sm: 2, md: 5 }, 
-        flex: { md: 1 }, 
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
+      <Box
+        sx={{
+          order: { xs: 2, md: 0 },
+          display: 'flex',
+          flexDirection: { xs: 'row', md: 'column' },
+          gap: { xs: 1, sm: 2, md: 5 },
+          flex: { md: 1 },
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
         {menuItems.map((item) => {
           const isActive = pathname.startsWith(item.path);
           return (
-            <Tooltip key={item.id} title={item.label} placement={isMobile ? "bottom" : "right"}>
+            <Tooltip key={item.id} title={item.label} placement={isMobile ? 'bottom' : 'right'}>
               <IconButton
                 onClick={() => handleNavigate(item.path)}
                 sx={{
@@ -106,17 +107,18 @@ const SideNav = () => {
         })}
       </Box>
 
-      {/* Settings & Profile Section */}
-      <Box sx={{ 
-        order: { xs: 3, md: 0 },
-        mt: { xs: 0, md: 'auto' }, 
-        display: 'flex', 
-        flexDirection: { xs: 'row', md: 'column' }, 
-        alignItems: 'center', 
-        gap: 1.5,
-        mr: { xs: 1, md: 0 }
-      }}>
-        <Tooltip title="Configuración" placement="right">
+      <Box
+        sx={{
+          order: { xs: 3, md: 0 },
+          mt: { xs: 0, md: 'auto' },
+          display: 'flex',
+          flexDirection: { xs: 'row', md: 'column' },
+          alignItems: 'center',
+          gap: 1.5,
+          mr: { xs: 1, md: 0 }
+        }}
+      >
+        <Tooltip title="Configuracion" placement="right">
           <IconButton
             onClick={() => handleNavigate('/settings')}
             sx={{
@@ -147,7 +149,7 @@ const SideNav = () => {
             '&:hover': { borderColor: '#4F8CFF', transform: 'scale(1.05)' }
           }}
         >
-           <Box sx={{ fontSize: { xs: '14px', md: '18px' }, fontWeight: 800, color: '#4F8CFF' }}>M</Box>
+          <Box sx={{ fontSize: { xs: '14px', md: '18px' }, fontWeight: 800, color: '#4F8CFF' }}>M</Box>
         </Box>
       </Box>
     </Box>

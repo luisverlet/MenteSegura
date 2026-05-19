@@ -3,32 +3,35 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { 
-  Box, 
-  Typography, 
-  Card, 
-  TextField, 
-  Button, 
-  InputAdornment, 
+import {
+  Box,
+  Typography,
+  Card,
+  TextField,
+  Button,
+  InputAdornment,
   IconButton,
-  Link
+  Link,
+  Snackbar,
+  Alert,
 } from '@mui/material';
-import { User, Key, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Eye } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import * as styles from './register.styles';
 import { useRouter } from 'next/navigation';
+import { extractAuthError, mapAuthNetworkError } from '@/modules/auth/utils/auth-feedback';
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'El nombre es obligatorio'),
   lastName: z.string().min(2, 'Los apellidos son obligatorios'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
-  confirmPassword: z.string().min(6, 'Mínimo 6 caracteres'),
+  email: z.string().email('Email invalido'),
+  password: z.string().min(6, 'Minimo 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Minimo 6 caracteres'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
+  message: 'Las contrasenas no coinciden',
+  path: ['confirmPassword'],
 });
 
 type RegisterForm = z.infer<typeof registerSchema>;
@@ -36,6 +39,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 const RegisterPage = () => {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorSnackbar, setErrorSnackbar] = useState({ open: false, message: '' });
   const router = useRouter();
 
   const {
@@ -45,7 +49,7 @@ const RegisterPage = () => {
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    mode: 'onChange'
+    mode: 'onChange',
   });
 
   const handleNext = async () => {
@@ -63,25 +67,30 @@ const RegisterPage = () => {
           last_name: data.lastName,
           email: data.email,
           password: data.password,
-          role_id: 2 // Using 2 for standard user, or whatever the backend expects
+          role_id: 2,
         }),
       });
+
       if (response.ok) {
         router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${JSON.stringify(errorData)}`);
+        return;
       }
+
+      const { userMessage } = await extractAuthError(response);
+      setErrorSnackbar({ open: true, message: userMessage });
     } catch (error) {
       console.error('Registration failed', error);
-      alert('Error en el registro');
+      setErrorSnackbar({ open: true, message: mapAuthNetworkError('register') });
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setErrorSnackbar((current) => ({ ...current, open: false }));
   };
 
   return (
     <Box sx={styles.pageWrapperStyles}>
       <Card sx={styles.registerCardStyles}>
-        {/* Form Side */}
         <Box sx={styles.formPanelStyles}>
           <Typography variant="h4" sx={styles.stepTitleStyles}>
             Creacion de cuenta
@@ -94,7 +103,7 @@ const RegisterPage = () => {
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
                     Nombre
                   </Typography>
-                  <TextField 
+                  <TextField
                     {...register('firstName')}
                     placeholder="Juan"
                     error={!!errors.firstName}
@@ -112,9 +121,9 @@ const RegisterPage = () => {
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
                     Apellidos
                   </Typography>
-                  <TextField 
+                  <TextField
                     {...register('lastName')}
-                    placeholder="Pérez"
+                    placeholder="Perez"
                     error={!!errors.lastName}
                     helperText={errors.lastName?.message}
                     InputProps={{
@@ -127,12 +136,7 @@ const RegisterPage = () => {
                   />
                 </Box>
 
-                <Button 
-                  variant="contained" 
-                  fullWidth 
-                  onClick={handleNext}
-                  sx={{ ...styles.buttonStyles, backgroundColor: '#4F8CFF', mt: 2 }}
-                >
+                <Button variant="contained" fullWidth onClick={handleNext} sx={{ ...styles.buttonStyles, backgroundColor: '#4F8CFF', mt: 2 }}>
                   Siguiente
                 </Button>
               </Box>
@@ -142,9 +146,9 @@ const RegisterPage = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Correo Electrónico
+                    Correo electronico
                   </Typography>
-                  <TextField 
+                  <TextField
                     {...register('email')}
                     placeholder="ejemplo@correo.com"
                     error={!!errors.email}
@@ -160,9 +164,9 @@ const RegisterPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Contraseña
+                    Contrasena
                   </Typography>
-                  <TextField 
+                  <TextField
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="**********"
@@ -178,15 +182,15 @@ const RegisterPage = () => {
                         <InputAdornment position="end">
                           <IconButton onClick={() => setShowPassword(!showPassword)}><Eye size={20} /></IconButton>
                         </InputAdornment>
-                      )
+                      ),
                     }}
                   />
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Repetir Contraseña
+                    Repetir contrasena
                   </Typography>
-                  <TextField 
+                  <TextField
                     {...register('confirmPassword')}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="**********"
@@ -202,20 +206,10 @@ const RegisterPage = () => {
                   />
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                  <Button 
-                    variant="contained" 
-                    fullWidth 
-                    onClick={() => setStep(1)}
-                    sx={{ ...styles.buttonStyles, backgroundColor: '#4F8CFF', opacity: 0.8 }}
-                  >
+                  <Button variant="contained" fullWidth onClick={() => setStep(1)} sx={{ ...styles.buttonStyles, backgroundColor: '#4F8CFF', opacity: 0.8 }}>
                     Anterior
                   </Button>
-                  <Button 
-                    type="submit"
-                    variant="contained" 
-                    fullWidth 
-                    sx={{ ...styles.buttonStyles, backgroundColor: '#4F8CFF' }}
-                  >
+                  <Button type="submit" variant="contained" fullWidth sx={{ ...styles.buttonStyles, backgroundColor: '#4F8CFF' }}>
                     Registrar
                   </Button>
                 </Box>
@@ -223,25 +217,30 @@ const RegisterPage = () => {
             )}
 
             <Typography variant="body2" sx={{ textAlign: 'center', mt: 4, fontWeight: 600, color: '#64748B' }}>
-              ¿Ya tienes cuenta?{' '}
+              Ya tienes cuenta?{' '}
               <Link component={NextLink} href="/login" sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
-                Inicia sesión
+                Inicia sesion
               </Link>
             </Typography>
           </form>
         </Box>
 
-        {/* Illustration Side */}
         <Box sx={styles.illustrationPanelStyles}>
-          <Image 
-            src="/assets/creation.svg" 
-            alt="Ilustración de Registro" 
-            width={550} 
-            height={550} 
-            priority 
+          <Image
+            src="/assets/creation.svg"
+            alt="Ilustracion de registro"
+            width={550}
+            height={550}
+            priority
           />
         </Box>
       </Card>
+
+      <Snackbar open={errorSnackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+          {errorSnackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -42,14 +42,26 @@ const GenericTable = <T extends { id: string | number }>({
   onRowsPerPageChange,
   isLoading = false,
 }: GenericTableProps<T>) => {
+  const totalCount = totalRows || rows.length;
+  const effectiveRowsPerPage = totalCount > 0 ? Math.min(rowsPerPage, totalCount) : rowsPerPage;
+  const safePage =
+    totalCount > 0
+      ? Math.min(page, Math.max(Math.ceil(totalCount / effectiveRowsPerPage) - 1, 0))
+      : 0;
+  const rowsPerPageOptions = Array.from(
+    new Set([5, 10, 25, 50, ...(totalCount > 0 && totalCount < 5 ? [totalCount] : [])])
+  ).sort((a, b) => a - b);
+
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF !important', borderRadius: '24px' }}>
-      <TableContainer sx={{ 
-        maxHeight: '70vh', 
-        borderRadius: '24px 24px 0 0',
-        overflow: 'auto',
-        backgroundColor: '#FFFFFF !important'
-      }}>
+      <TableContainer
+        sx={{
+          maxHeight: '70vh',
+          borderRadius: '24px 24px 0 0',
+          overflow: 'auto',
+          backgroundColor: '#FFFFFF !important'
+        }}
+      >
         <Table stickyHeader aria-label="sticky table" sx={{ backgroundColor: '#FFFFFF !important' }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#FFFFFF !important' }}>
@@ -57,9 +69,9 @@ const GenericTable = <T extends { id: string | number }>({
                 <TableCell
                   key={column.id as string}
                   align={column.align || 'center'}
-                  sx={{ 
-                    minWidth: column.minWidth, 
-                    fontWeight: 800, 
+                  sx={{
+                    minWidth: column.minWidth,
+                    fontWeight: 800,
                     color: '#64748B',
                     backgroundColor: '#FFFFFF !important',
                     borderBottom: '2px solid #F1F5F9',
@@ -78,12 +90,12 @@ const GenericTable = <T extends { id: string | number }>({
                 {columns.map((column) => {
                   const value = column.id === 'actions' ? null : row[column.id as keyof T];
                   return (
-                    <TableCell 
-                      key={column.id as string} 
+                    <TableCell
+                      key={column.id as string}
                       align={column.align || 'center'}
-                      sx={{ 
-                        py: 2.2, 
-                        fontWeight: 600, 
+                      sx={{
+                        py: 2.2,
+                        fontWeight: 600,
                         color: '#1E293B',
                         borderBottom: '1px solid #F1F5F9',
                         fontSize: '14px',
@@ -110,15 +122,15 @@ const GenericTable = <T extends { id: string | number }>({
       </TableContainer>
 
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rowsPerPageOptions={rowsPerPageOptions}
         component="div"
-        count={totalRows || rows.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
+        count={totalCount}
+        rowsPerPage={effectiveRowsPerPage}
+        page={safePage}
         onPageChange={(e, p) => onPageChange?.(e, p)}
         onRowsPerPageChange={(e) => onRowsPerPageChange?.(e)}
-        labelRowsPerPage="Filas por página:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+        labelRowsPerPage="Filas por pagina:"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `mas de ${to}`}`}
         sx={{
           borderTop: '1px solid #F1F5F9',
           backgroundColor: '#FFFFFF !important',

@@ -71,5 +71,33 @@ export const loginButtonStyles: SxProps<Theme> = {
   fontWeight: 700, 
   backgroundColor: '#4F8CFF',
   textTransform: 'none',
-  mb: 4
+  mb: 4,
+  boxShadow: 'none'
+};
+
+export const loadingBackdropStyles: SxProps<Theme> = {
+  zIndex: 1400,
+  backdropFilter: 'blur(10px)',
+  backgroundColor: 'rgba(243, 247, 255, 0.82)',
+};
+
+export const loadingCardStyles: SxProps<Theme> = {
+  width: 'min(92vw, 420px)',
+  p: { xs: 4, md: 5 },
+  borderRadius: '28px',
+  backgroundColor: '#FFF',
+  boxShadow: '0 24px 60px rgba(15, 23, 42, 0.12)',
+  textAlign: 'center'
+};
+
+export const loadingSpinnerWrapStyles: SxProps<Theme> = {
+  width: 82,
+  height: 82,
+  borderRadius: '24px',
+  background: 'linear-gradient(135deg, rgba(79, 140, 255, 0.12), rgba(59, 130, 246, 0.22))',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  mx: 'auto',
+  mb: 3
 };

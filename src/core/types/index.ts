@@ -42,3 +42,16 @@ export interface FilterState {
   startDate: string;
   endDate: string;
 }
+
+export interface Appointment {
+  id: number;
+  date: string;
+  time: string;
+  studentName: string;
+  riskSummary: string;
+  place: string;
+  reason?: string;
+  status?: string;
+  studentId?: number | null;
+  appointmentDateIso?: string;
+}

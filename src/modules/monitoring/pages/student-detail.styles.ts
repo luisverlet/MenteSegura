@@ -39,6 +39,13 @@ export const scoreValueStyles: SxProps<Theme> = {
   mt: 0.5
 };
 
+export const scoreRiskStyles: SxProps<Theme> = {
+  fontWeight: 700,
+  fontSize: '12px',
+  color: '#64748B',
+  mt: 0.7
+};
+
 export const historyButtonStyles: SxProps<Theme> = {
   backgroundColor: '#4F8CFF',
   color: '#FFF',
