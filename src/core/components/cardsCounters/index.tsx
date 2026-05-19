@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Card, Skeleton } from '@mui/material';
+import { Typography, Card, Skeleton } from '@mui/material';
 
 interface CardCountersProps {
   title: string;

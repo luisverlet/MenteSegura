@@ -46,7 +46,7 @@ const gad7Questions = [
   'Sentir miedo, como si algo terrible pudiera pasar.'
 ];
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
@@ -57,8 +57,40 @@ import { extractAuthError, mapAuthNetworkError } from '@/modules/auth/utils/auth
 import { buildRequestError, buildNetworkError } from '@/core/utils/request-feedback';
 import { formatRisk } from '@/core/utils/formatters';
 import FormDatePicker from '@/core/components/FormDatePicker';
+import {
+  AppointmentSlot,
+  isAppointmentSlotTaken,
+  normalizeDateKeyFromIso,
+  validateAppointmentSchedule,
+  parseDateInput,
+} from '@/core/utils/date-time-validation';
 
 const appointmentHourOptions = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+
+const normalizeArrayPayload = (payload: any) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
+const extractAppointmentDate = (appointment: any) =>
+  (Array.isArray(appointment) ? appointment[2] || appointment[3] : null) ||
+  appointment?.appointment_date ||
+  appointment?.date ||
+  appointment?.fecha ||
+  appointment?.scheduled_at ||
+  '';
+
+const parseAppointmentSlot = (appointment: any, index: number): AppointmentSlot | null => {
+  const appointmentDateIso = extractAppointmentDate(appointment);
+  if (!appointmentDateIso) return null;
+
+  return {
+    id: Number(appointment?.id || appointment?.appointment_id || appointment?.id_cita || index + 1),
+    appointmentDateIso,
+  };
+};
 
 const studentSchema = z.object({
   name: z.string().min(2, 'Nombre requerido'),
@@ -66,7 +98,13 @@ const studentSchema = z.object({
   email: z.string().email('Email invalido'),
   password: z.string().min(6, 'Minimo 6 caracteres'),
   student_code: z.string().min(5, 'Codigo requerido'),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato debe ser YYYY-MM-DD (ej: 2000-06-17)'),
+  birth_date: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato debe ser YYYY-MM-DD (ej: 2000-06-17)')
+    .refine((value) => !parseDateInput(value).error, 'Ingresa una fecha de nacimiento valida')
+    .refine((value) => {
+      const parsed = parseDateInput(value);
+      return !parsed.date || parsed.date <= new Date();
+    }, 'La fecha de nacimiento no puede estar en el futuro'),
   gender: z.string().min(1, 'Genero requerido'),
   faculty: z.number().int().min(1, 'Selecciona una facultad'),
   program: z.number().int().min(1, 'Selecciona un programa'),
@@ -86,6 +124,7 @@ const DevRegisterPage = () => {
   const [students, setStudents] = React.useState<any[]>([]);
   const [faculties, setFaculties] = React.useState<any[]>([]);
   const [programs, setPrograms] = React.useState<any[]>([]);
+  const [appointments, setAppointments] = React.useState<AppointmentSlot[]>([]);
   const [selectedStudent, setSelectedStudent] = React.useState<string>('');
   const [studentPassword, setStudentPassword] = React.useState<string>('');
   const [studentAccessToken, setStudentAccessToken] = React.useState<string>('');
@@ -132,11 +171,12 @@ const DevRegisterPage = () => {
     setIsLoadingStudents(true);
     const token = localStorage.getItem('auth_token');
     try {
-      const [studentsRes, usersRes, facRes, progRes] = await Promise.all([
+      const [studentsRes, usersRes, facRes, progRes, appointmentsRes] = await Promise.all([
         fetchWithRetry('/api/proxy/students', { headers: { Authorization: `Bearer ${token}` } }),
         fetchWithRetry('/api/proxy/users', { headers: { Authorization: `Bearer ${token}` } }),
         fetchWithRetry('/api/proxy/faculties', { headers: { Authorization: `Bearer ${token}` } }),
-        fetchWithRetry('/api/proxy/programs', { headers: { Authorization: `Bearer ${token}` } })
+        fetchWithRetry('/api/proxy/programs', { headers: { Authorization: `Bearer ${token}` } }),
+        fetchWithRetry('/api/proxy/appointments', { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       if (studentsRes.ok && usersRes.ok) {
@@ -163,7 +203,16 @@ const DevRegisterPage = () => {
 
       if (progRes.ok) {
         const data = await progRes.json();
-        setPrograms(Array.isArray(data) ? data : (data.items || []));
+        setPrograms(normalizeArrayPayload(data));
+      }
+
+      if (appointmentsRes.ok) {
+        const data = await appointmentsRes.json();
+        setAppointments(
+          normalizeArrayPayload(data)
+            .map(parseAppointmentSlot)
+            .filter((slot: AppointmentSlot | null): slot is AppointmentSlot => Boolean(slot))
+        );
       }
     } catch (e) {
       console.error(e);
@@ -179,7 +228,7 @@ const DevRegisterPage = () => {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<StudentForm>({
@@ -194,8 +243,8 @@ const DevRegisterPage = () => {
     }
   });
 
-  const selectedFaculty = watch('faculty');
-  const selectedProgram = watch('program');
+  const selectedFaculty = useWatch({ control, name: 'faculty' });
+  const selectedProgram = useWatch({ control, name: 'program' });
 
   const filteredPrograms = React.useMemo(() => {
     if (!selectedFaculty || Number.isNaN(selectedFaculty)) return [];
@@ -210,11 +259,17 @@ const DevRegisterPage = () => {
     }
   }, [filteredPrograms, selectedProgram, setValue]);
 
+  const selectedAppointmentDateKey = normalizeDateKeyFromIso(appointmentDate);
+  const appointmentValidation = React.useMemo(
+    () => validateAppointmentSchedule(appointmentDate, appointments),
+    [appointmentDate, appointments]
+  );
+
   const onSubmit = async (data: StudentForm) => {
     setStatus(null);
     const token = localStorage.getItem('auth_token');
     try {
-      const response = await fetch('/api/proxy/register', {
+      const response = await fetchWithRetry('/api/proxy/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +288,7 @@ const DevRegisterPage = () => {
         const message = await buildRequestError(response, 'No pudimos registrar el estudiante.');
         setStatus({ type: 'error', message });
       }
-    } catch (error) {
+    } catch {
       setStatus({ type: 'error', message: buildNetworkError('el registro del estudiante') });
     }
   };
@@ -259,7 +314,7 @@ const DevRegisterPage = () => {
         throw new Error('No encontramos el correo del estudiante seleccionado.');
       }
 
-      const loginRes = await fetch('/api/proxy/login', {
+      const loginRes = await fetchWithRetry('/api/proxy/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: studentPassword }),
@@ -304,7 +359,7 @@ const DevRegisterPage = () => {
       const token = await ensureStudentToken();
       if (!token) return;
 
-      const response = await fetch('/api/proxy/predict', {
+      const response = await fetchWithRetry('/api/proxy/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -351,7 +406,7 @@ const DevRegisterPage = () => {
       const token = await ensureStudentToken();
       if (!token) return;
 
-      const response = await fetch('/api/proxy/predict_anxiety', {
+      const response = await fetchWithRetry('/api/proxy/predict_anxiety', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -402,6 +457,12 @@ const DevRegisterPage = () => {
       return;
     }
 
+    if (!appointmentValidation.isValid) {
+      setAppointmentStatus({ type: 'error', message: appointmentValidation.message || 'Revisa la fecha y hora de la cita.' });
+      setTimeout(scrollToForms, 100);
+      return;
+    }
+
     setAppointmentStatus(null);
     setIsSubmittingAppointment(true);
 
@@ -409,7 +470,7 @@ const DevRegisterPage = () => {
       const token = await ensureStudentToken();
       if (!token) return;
 
-      const response = await fetch('/api/proxy/appointments', {
+      const response = await fetchWithRetry('/api/proxy/appointments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -425,6 +486,7 @@ const DevRegisterPage = () => {
         setAppointmentStatus({ type: 'success', message: 'Cita solicitada correctamente.' });
         setAppointmentDate('');
         setAppointmentReason('');
+        fetchData();
         setTimeout(scrollToForms, 100);
       } else {
         const message = await buildRequestError(response, 'No pudimos registrar la cita.');
@@ -478,6 +540,7 @@ const DevRegisterPage = () => {
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: dayjs().format('YYYY-MM-DD') }}
                   error={!!errors.birth_date}
                   helperText={errors.birth_date?.message}
                 />
@@ -724,6 +787,8 @@ const DevRegisterPage = () => {
                   <FormDatePicker
                     label="Fecha"
                     value={appointmentDate ? dayjs(appointmentDate) : null}
+                    minDate={dayjs().startOf('day')}
+                    error={appointmentDate ? appointmentValidation.dateError : undefined}
                     onChange={(value) => {
                       const currentTime = appointmentDate ? dayjs(appointmentDate).format('HH:mm') : '08:00';
                       setAppointmentDate(value ? `${value.format('YYYY-MM-DD')}T${currentTime}` : '');
@@ -736,6 +801,8 @@ const DevRegisterPage = () => {
                     select
                     fullWidth
                     value={appointmentDate ? dayjs(appointmentDate).format('HH:mm') : '08:00'}
+                    error={!!appointmentDate && !!appointmentValidation.timeError}
+                    helperText={appointmentDate ? appointmentValidation.timeError : undefined}
                     onChange={(e) => {
                       const currentDate = appointmentDate
                         ? dayjs(appointmentDate).format('YYYY-MM-DD')
@@ -744,7 +811,13 @@ const DevRegisterPage = () => {
                     }}
                   >
                     {appointmentHourOptions.map((hour) => (
-                      <MenuItem key={hour} value={hour}>{hour}</MenuItem>
+                      <MenuItem
+                        key={hour}
+                        value={hour}
+                        disabled={isAppointmentSlotTaken(selectedAppointmentDateKey, hour, appointments)}
+                      >
+                        {hour}
+                      </MenuItem>
                     ))}
                   </TextField>
                 </Grid>
@@ -766,7 +839,7 @@ const DevRegisterPage = () => {
                 fullWidth
                 size="large"
                 onClick={handleAppointmentSubmit}
-                disabled={isSubmittingAppointment}
+                disabled={isSubmittingAppointment || !appointmentDate || !appointmentReason.trim() || !appointmentValidation.isValid}
                 sx={{ mt: 4, py: 2, fontWeight: 800, backgroundColor: '#4F8CFF', '&:hover': { backgroundColor: '#3A7BD5' } }}
               >
                 {isSubmittingAppointment ? <CircularProgress size={24} color="inherit" /> : 'Solicitar Cita'}

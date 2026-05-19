@@ -22,6 +22,9 @@ import GenericInput from '@/core/components/Input/GenericInput';
 import { usePagination } from '@/core/hooks/usePagination';
 import { ExportOptions } from '@/core/types';
 import { formatRisk, toTitleCase } from '@/core/utils/formatters';
+import { fetchWithRetry } from '@/core/utils/network';
+import { buildNetworkError, buildRequestError } from '@/core/utils/request-feedback';
+import { validateDateRangeInput } from '@/core/utils/date-time-validation';
 
 const defaultExportOptions: ExportOptions = {
   anonymousData: true,
@@ -81,6 +84,9 @@ const ReportsPage = () => {
   const [exportOptions, setExportOptions] = useState<ExportOptions>(defaultExportOptions);
   const [isExporting, setIsExporting] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
+  const [exportErrors, setExportErrors] = useState<Partial<Pick<ExportOptions, 'startDate' | 'endDate'>>>({});
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
     open: false,
     message: '',
@@ -90,12 +96,24 @@ const ReportsPage = () => {
   React.useEffect(() => {
     const fetchStudents = async () => {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setPageError('No encontramos una sesion activa para consultar los reportes.');
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setPageError('');
+
       try {
-        const response = await fetch('/api/proxy/evaluations?page=1&limit=100', {
+        const response = await fetchWithRetry('/api/proxy/evaluations?page=1&limit=100', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) return;
+        if (!response.ok) {
+          setPageError(await buildRequestError(response, 'No pudimos cargar los datos de reportes.'));
+          return;
+        }
 
         const data = await response.json();
         const items = data.items || data.data || [];
@@ -111,6 +129,9 @@ const ReportsPage = () => {
         setStudents(mappedStudents);
       } catch (error) {
         console.error('Error al obtener estudiantes', error);
+        setPageError(buildNetworkError('los datos de reportes'));
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -123,10 +144,20 @@ const ReportsPage = () => {
   );
 
   const setOption = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) => {
+    if (key === 'startDate' || key === 'endDate') {
+      setExportErrors((current) => ({ ...current, [key]: undefined }));
+    }
     setExportOptions((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleExport = async () => {
+    const validation = validateDateRangeInput(exportOptions.startDate, exportOptions.endDate);
+    if (!validation.isValid) {
+      setExportErrors({ [validation.field || 'startDate']: validation.message });
+      setSnackbar({ open: true, message: validation.message || 'Revisa las fechas del reporte.', severity: 'error' });
+      return;
+    }
+
     setIsExporting(true);
     const token = localStorage.getItem('auth_token');
 
@@ -135,6 +166,12 @@ const ReportsPage = () => {
         page: '1',
         limit: '100',
       });
+      if (validation.startDateKey) params.set('start_date', validation.startDateKey);
+      if (validation.endDateKey) params.set('end_date', validation.endDateKey);
+      params.set('anonymous_data', String(exportOptions.anonymousData));
+      params.set('include_phq9', String(exportOptions.includePHQ9));
+      params.set('include_gad7', String(exportOptions.includeGAD7));
+      params.set('include_probability', String(exportOptions.includeProbability));
 
       const response = await fetch(`/api/proxy/reports/export?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -191,6 +228,17 @@ const ReportsPage = () => {
       onRightActionClick={() => setExportOpen(true)}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 3 }}>
+        {pageError && (
+          <Card sx={{ p: 3, borderRadius: '20px', border: '1px solid #FECACA', backgroundColor: '#FFF5F5', boxShadow: 'none' }}>
+            <Typography sx={{ fontWeight: 800, color: '#B91C1C', mb: 0.7 }}>
+              No pudimos cargar completamente los reportes
+            </Typography>
+            <Typography sx={{ color: '#7F1D1D', fontWeight: 600, fontSize: '14px' }}>
+              {pageError}
+            </Typography>
+          </Card>
+        )}
+
         <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-end' }}>
           <Button
             variant="outlined"
@@ -222,6 +270,7 @@ const ReportsPage = () => {
               rowsPerPage={pagination.rowsPerPage}
               onPageChange={handlePageChange}
               onRowsPerPageChange={handleRowsPerPageChange}
+              isLoading={isLoading}
             />
           </Card>
         </Box>
@@ -279,6 +328,8 @@ const ReportsPage = () => {
               labelTitle="Fecha de inicio"
               placeholder="DD/MM/AAAA"
               value={exportOptions.startDate}
+              error={!!exportErrors.startDate}
+              helperText={exportErrors.startDate}
               onChange={(e) => setOption('startDate', e.target.value)}
             />
           </Box>
@@ -287,6 +338,8 @@ const ReportsPage = () => {
               labelTitle="Fecha de fin"
               placeholder="DD/MM/AAAA"
               value={exportOptions.endDate}
+              error={!!exportErrors.endDate}
+              helperText={exportErrors.endDate}
               onChange={(e) => setOption('endDate', e.target.value)}
             />
           </Box>

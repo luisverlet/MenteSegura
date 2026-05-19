@@ -12,8 +12,7 @@ import {
   Checkbox,
   TablePagination,
   Skeleton,
-  Box,
-  Typography
+  Box
 } from '@mui/material';
 
 interface Column {

@@ -26,6 +26,13 @@ import * as styles from './student-detail.styles';
 import { fetchWithRetry } from '@/core/utils/network';
 import { buildNetworkError, buildRequestError } from '@/core/utils/request-feedback';
 
+const InfoItem = ({ label, value }: { label: string; value: string }) => (
+  <Box>
+    <Typography sx={styles.labelStyles}>{label}</Typography>
+    <Typography sx={styles.valueStyles}>{value}</Typography>
+  </Box>
+);
+
 const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
   const [view, setView] = useState<'detail' | 'history'>('detail');
   const [student, setStudent] = useState<any>(null);
@@ -152,13 +159,6 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
       setIsLoading(false);
     }
   }, [studentId]);
-
-  const InfoItem = ({ label, value }: { label: string; value: string }) => (
-    <Box>
-      <Typography sx={styles.labelStyles}>{label}</Typography>
-      <Typography sx={styles.valueStyles}>{value}</Typography>
-    </Box>
-  );
 
   const historyColumns = [
     { id: 'name' as any, label: 'Nombre', align: 'left' as const, minWidth: 200 },

@@ -1,6 +1,8 @@
 'use client';
 
 import { createTheme } from '@mui/material/styles';
+import '@fontsource/montserrat/400.css';
+import '@fontsource/montserrat/500.css';
 import '@fontsource/montserrat/600.css';
 import '@fontsource/montserrat/700.css';
 import '@fontsource/montserrat/800.css';

@@ -13,6 +13,8 @@ interface FormDatePickerProps {
   onChange: (value: Dayjs | null) => void;
   error?: string;
   required?: boolean;
+  minDate?: Dayjs;
+  maxDate?: Dayjs;
 }
 
 const FormDatePicker: React.FC<FormDatePickerProps> = ({
@@ -20,7 +22,9 @@ const FormDatePicker: React.FC<FormDatePickerProps> = ({
   value,
   onChange,
   error,
-  required = false
+  required = false,
+  minDate,
+  maxDate
 }) => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -29,6 +33,8 @@ const FormDatePicker: React.FC<FormDatePickerProps> = ({
           label={`${label}${required ? ' *' : ''}`}
           value={value}
           onChange={onChange}
+          minDate={minDate}
+          maxDate={maxDate}
           sx={{
             width: '100%',
             '& .MuiOutlinedInput-root': {

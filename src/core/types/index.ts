@@ -8,6 +8,7 @@ export interface Student {
   code: string;
   risk: string;           // e.g. "32%"  → backend: number
   date: string;           // e.g. "02 - 03 - 2026" → backend: ISO date string
+  dateIso?: string;
   program?: string;
   email?: string;
   contact?: string;

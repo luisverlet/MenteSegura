@@ -7,9 +7,7 @@ import {
   InputAdornment, 
   IconButton, 
   Popover,
-  Typography,
-  Button,
-  Grid
+  Typography
 } from '@mui/material';
 import { Search, ListFilter, X } from 'lucide-react';
 

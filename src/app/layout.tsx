@@ -1,13 +1,6 @@
 import type { Metadata } from 'next';
-import { Montserrat } from 'next/font/google';
 import ThemeRegistry from './registry';
 import { Box } from '@mui/material';
-
-const montserrat = Montserrat({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-montserrat',
-});
 
 export const metadata: Metadata = {
   title: 'MenteSegura',
@@ -21,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={montserrat.className}>
+      <body>
         <ThemeRegistry>
           <Box sx={{ position: 'relative', minHeight: '100vh', overflowX: 'hidden' }}>
             {/* Global Background Image */}

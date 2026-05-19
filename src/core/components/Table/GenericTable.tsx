@@ -108,6 +108,15 @@ const GenericTable = <T extends { id: string | number }>({
                 })}
               </TableRow>
             ))}
+            {rows.length === 0 && isLoading && (
+              <TableRow sx={{ backgroundColor: '#FFFFFF !important' }}>
+                <TableCell colSpan={columns.length} align="center" sx={{ py: 10, backgroundColor: '#FFFFFF !important' }}>
+                  <Typography variant="body1" sx={{ color: '#64748B', fontWeight: 700 }}>
+                    Cargando registros...
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
             {rows.length === 0 && !isLoading && (
               <TableRow sx={{ backgroundColor: '#FFFFFF !important' }}>
                 <TableCell colSpan={columns.length} align="center" sx={{ py: 10, backgroundColor: '#FFFFFF !important' }}>

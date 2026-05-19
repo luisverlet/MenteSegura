@@ -26,6 +26,14 @@ import { fetchWithRetry } from '@/core/utils/network';
 import { buildNetworkError, buildRequestError } from '@/core/utils/request-feedback';
 import { combineRisks, formatRisk, toTitleCase } from '@/core/utils/formatters';
 import dayjs from 'dayjs';
+import {
+  isAppointmentSlotTaken,
+  normalizeDateKeyFromIso,
+  normalizeTimeKeyFromIso,
+  parseDateInput,
+  parseTimeInput,
+  validateAppointmentSchedule,
+} from '@/core/utils/date-time-validation';
 
 const defaultFilters: FilterState = {
   name: '',
@@ -79,6 +87,21 @@ const extractAppointmentDate = (appointment: any) =>
   appointment?.fecha ||
   appointment?.scheduled_at ||
   '';
+
+const extractPhqRisk = (item: any) =>
+  item?.latest_phq9?.risk ||
+  item?.latest_phq9?.classification ||
+  item?.phq_risk ||
+  item?.depression_risk;
+
+const extractGadRisk = (item: any) =>
+  item?.latest_gad7?.risk ||
+  item?.latest_gad7?.classification ||
+  item?.gad_risk ||
+  item?.anxiety_risk;
+
+const getEvaluationRisk = (item: any) =>
+  combineRisks(extractPhqRisk(item), extractGadRisk(item), item?.current_risk || item?.risk);
 
 const formatDate = (isoDate: string) => {
   if (!isoDate) return 'Sin fecha';
@@ -137,6 +160,7 @@ const AppointmentsPage = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<FilterState>(defaultFilters);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
+  const [filterErrors, setFilterErrors] = useState<Partial<Pick<FilterState, 'startDate' | 'endDate'>>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingAppointment, setIsSavingAppointment] = useState(false);
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
@@ -216,62 +240,20 @@ const AppointmentsPage = () => {
         }
       });
 
-      const detailEntries = await Promise.all(
-        evaluationItems.map(async (item: any) => {
-          try {
-            const response = await fetchWithRetry(`/api/proxy/students/${item.student_id}/evaluations`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (!response.ok) {
-              return null;
-            }
-
-            return await response.json();
-          } catch {
-            return null;
-          }
-        })
-      );
-
       const riskMap = new Map<number, string>(
-        evaluationItems.map((item: any, index: number) => {
-          const detail = detailEntries[index];
-          const phqRisk =
-            detail?.latest_phq9?.risk ||
-            detail?.latest_phq9?.classification ||
-            detail?.phq_risk;
-          const gadRisk =
-            detail?.latest_gad7?.risk ||
-            detail?.latest_gad7?.classification ||
-            detail?.gad_risk ||
-            detail?.anxiety_risk;
-
-          return [
-            Number(item.student_id),
-            combineRisks(phqRisk, gadRisk, item.current_risk),
-          ] as const;
-        })
+        evaluationItems.map((item: any) => [
+          Number(item.student_id),
+          getEvaluationRisk(item),
+        ] as const)
       );
 
       const riskByStudentName = new Map<string, string>(
-        evaluationItems.map((item: any, index: number) => {
-          const detail = detailEntries[index];
-          const phqRisk =
-            detail?.latest_phq9?.risk ||
-            detail?.latest_phq9?.classification ||
-            detail?.phq_risk;
-          const gadRisk =
-            detail?.latest_gad7?.risk ||
-            detail?.latest_gad7?.classification ||
-            detail?.gad_risk ||
-            detail?.anxiety_risk;
-
+        evaluationItems.map((item: any) => {
           const normalizedName = toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin nombre');
 
           return [
             normalizeLookupName(normalizedName),
-            combineRisks(phqRisk, gadRisk, item.current_risk),
+            getEvaluationRisk(item),
           ] as const;
         })
       );
@@ -323,8 +305,11 @@ const AppointmentsPage = () => {
   }, [fetchAppointments]);
 
   const filteredAppointments = useMemo(
-    () =>
-      appointments.filter((appointment) => {
+    () => {
+      const dateFilter = parseDateInput(activeFilters.startDate);
+      const timeFilter = parseTimeInput(activeFilters.endDate);
+
+      return appointments.filter((appointment) => {
         if (
           activeFilters.name &&
           !appointment.studentName.toLowerCase().includes(activeFilters.name.toLowerCase())
@@ -335,11 +320,12 @@ const AppointmentsPage = () => {
           !appointment.riskSummary.toLowerCase().includes(activeFilters.code.toLowerCase())
         ) return false;
 
-        if (activeFilters.startDate && appointment.date !== activeFilters.startDate) return false;
-        if (activeFilters.endDate && appointment.time !== activeFilters.endDate) return false;
+        if (dateFilter.dateKey && normalizeDateKeyFromIso(appointment.appointmentDateIso) !== dateFilter.dateKey) return false;
+        if (timeFilter.timeKey && normalizeTimeKeyFromIso(appointment.appointmentDateIso) !== timeFilter.timeKey) return false;
 
         return true;
-      }),
+      });
+    },
     [appointments, activeFilters]
   );
 
@@ -360,6 +346,10 @@ const AppointmentsPage = () => {
   );
 
   const hasActiveFilters = Object.values(activeFilters).some((value) => value !== '');
+  const selectedDateKey = normalizeDateKeyFromIso(appointmentForm.appointmentDate);
+  const scheduleValidation = selectedAppointment
+    ? validateAppointmentSchedule(appointmentForm.appointmentDate, appointments, selectedAppointment.id)
+    : { isValid: true };
 
   const handleManage = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
@@ -383,6 +373,12 @@ const AppointmentsPage = () => {
     setIsSavingAppointment(true);
 
     try {
+      const validation = validateAppointmentSchedule(appointmentForm.appointmentDate, appointments, selectedAppointment.id);
+      if (!validation.isValid) {
+        setSnackbar({ open: true, message: validation.message || 'Revisa la fecha y hora de la cita.', severity: 'warning' });
+        return;
+      }
+
       const response = await fetchWithRetry(`/api/proxy/appointments/${selectedAppointment.id}`, {
         method: 'PUT',
         headers: {
@@ -403,7 +399,7 @@ const AppointmentsPage = () => {
       } else {
         setSnackbar({ open: true, message: await buildRequestError(response, 'No pudimos actualizar la cita.'), severity: 'error' });
       }
-    } catch (error) {
+    } catch {
       setSnackbar({ open: true, message: buildNetworkError('la actualizacion de la cita'), severity: 'error' });
     } finally {
       setIsSavingAppointment(false);
@@ -436,7 +432,7 @@ const AppointmentsPage = () => {
       } else {
         setSnackbar({ open: true, message: await buildRequestError(response, 'No pudimos eliminar la cita.'), severity: 'error' });
       }
-    } catch (error) {
+    } catch {
       setSnackbar({ open: true, message: buildNetworkError('la eliminacion de la cita'), severity: 'error' });
     } finally {
       setIsDeletingAppointment(false);
@@ -444,6 +440,21 @@ const AppointmentsPage = () => {
   };
 
   const applyFilters = () => {
+    const dateValidation = parseDateInput(draftFilters.startDate);
+    if (dateValidation.error) {
+      setFilterErrors({ startDate: dateValidation.error });
+      setSnackbar({ open: true, message: dateValidation.error, severity: 'warning' });
+      return;
+    }
+
+    const timeValidation = parseTimeInput(draftFilters.endDate);
+    if (timeValidation.error) {
+      setFilterErrors({ endDate: timeValidation.error });
+      setSnackbar({ open: true, message: timeValidation.error, severity: 'warning' });
+      return;
+    }
+
+    setFilterErrors({});
     setActiveFilters(draftFilters);
     resetPage();
     setIsFilterOpen(false);
@@ -452,6 +463,7 @@ const AppointmentsPage = () => {
   const clearFilters = () => {
     setDraftFilters(defaultFilters);
     setActiveFilters(defaultFilters);
+    setFilterErrors({});
     resetPage();
   };
 
@@ -552,6 +564,8 @@ const AppointmentsPage = () => {
               <FormDatePicker
                 label="Fecha"
                 value={appointmentForm.appointmentDate ? dayjs(appointmentForm.appointmentDate) : null}
+                minDate={dayjs().startOf('day')}
+                error={scheduleValidation.dateError}
                 onChange={(value) => {
                   const currentTime = appointmentForm.appointmentDate ? dayjs(appointmentForm.appointmentDate).format('HH:mm') : '08:00';
                   setAppointmentForm((current) => ({
@@ -566,6 +580,8 @@ const AppointmentsPage = () => {
                 select
                 fullWidth
                 value={appointmentForm.appointmentDate ? dayjs(appointmentForm.appointmentDate).format('HH:mm') : '08:00'}
+                error={!!scheduleValidation.timeError}
+                helperText={scheduleValidation.timeError}
                 onChange={(e) => {
                   const currentDate = appointmentForm.appointmentDate
                     ? dayjs(appointmentForm.appointmentDate).format('YYYY-MM-DD')
@@ -577,7 +593,13 @@ const AppointmentsPage = () => {
                 }}
               >
                 {appointmentHourOptions.map((hour) => (
-                  <MenuItem key={hour} value={hour}>{hour}</MenuItem>
+                  <MenuItem
+                    key={hour}
+                    value={hour}
+                    disabled={isAppointmentSlotTaken(selectedDateKey, hour, appointments, selectedAppointment.id)}
+                  >
+                    {hour}
+                  </MenuItem>
                 ))}
               </TextField>
 
@@ -607,7 +629,7 @@ const AppointmentsPage = () => {
               <Button
                 variant="contained"
                 onClick={handleUpdateAppointment}
-                disabled={isSavingAppointment || !appointmentForm.appointmentDate || !appointmentForm.reason.trim()}
+                disabled={isSavingAppointment || !appointmentForm.appointmentDate || !appointmentForm.reason.trim() || !scheduleValidation.isValid}
                 sx={{
                   height: 52,
                   borderRadius: '12px',
@@ -672,13 +694,23 @@ const AppointmentsPage = () => {
             labelTitle="Fecha"
             placeholder="DD/MM/AAAA"
             value={draftFilters.startDate}
-            onChange={(e) => setDraftFilters((current) => ({ ...current, startDate: e.target.value }))}
+            error={!!filterErrors.startDate}
+            helperText={filterErrors.startDate}
+            onChange={(e) => {
+              setFilterErrors((current) => ({ ...current, startDate: undefined }));
+              setDraftFilters((current) => ({ ...current, startDate: e.target.value }));
+            }}
           />
           <GenericInput
             labelTitle="Hora"
             placeholder="08:30 AM"
             value={draftFilters.endDate}
-            onChange={(e) => setDraftFilters((current) => ({ ...current, endDate: e.target.value }))}
+            error={!!filterErrors.endDate}
+            helperText={filterErrors.endDate}
+            onChange={(e) => {
+              setFilterErrors((current) => ({ ...current, endDate: undefined }));
+              setDraftFilters((current) => ({ ...current, endDate: e.target.value }));
+            }}
           />
 
           <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>

@@ -30,7 +30,7 @@ import { Settings, User, Shield, BookOpen, Plus, Pencil, Trash2, Users, Graduati
 import DashboardLayout from '@/core/components/layout/DashboardLayout';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { fetchWithRetry } from '@/core/utils/network';
+import { clearFetchCache, fetchWithRetry } from '@/core/utils/network';
 import { buildNetworkError, buildRequestError } from '@/core/utils/request-feedback';
 
 interface ProgramForm {
@@ -413,6 +413,8 @@ export default function SettingsPage() {
     if (activeTab === 1) {
       fetchAdminData();
     }
+    // fetchAdminData intentionally reads the latest local state as a fallback for partial API responses.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const onSubmitProgram = async (data: ProgramForm) => {
@@ -435,7 +437,7 @@ export default function SettingsPage() {
         const message = await buildRequestError(res, 'No pudimos crear el programa academico.');
         setStatus({ type: 'error', msg: message });
       }
-    } catch (error) {
+    } catch {
       setStatus({ type: 'error', msg: buildNetworkError('la creacion del programa') });
     }
   };
@@ -462,7 +464,7 @@ export default function SettingsPage() {
         const message = await buildRequestError(res, 'No pudimos crear la facultad.');
         setStatus({ type: 'error', msg: message });
       }
-    } catch (error) {
+    } catch {
       setStatus({ type: 'error', msg: buildNetworkError('la creacion de la facultad') });
     }
   };
@@ -508,7 +510,7 @@ export default function SettingsPage() {
     setIsSavingUser(true);
 
     try {
-      const res = await fetch(`/api/proxy/users/${selectedUser.id}`, {
+      const res = await fetchWithRetry(`/api/proxy/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -524,7 +526,7 @@ export default function SettingsPage() {
 
       if (res.ok) {
         if (editingOwnProfile && passwordForm.current_password && passwordForm.new_password) {
-          const passwordResponse = await fetch('/api/proxy/change-password', {
+          const passwordResponse = await fetchWithRetry('/api/proxy/change-password', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -564,7 +566,7 @@ export default function SettingsPage() {
         const message = await buildRequestError(res, 'No pudimos actualizar el usuario.');
         setSnackbar({ open: true, message, severity: 'error' });
       }
-    } catch (error) {
+    } catch {
       setSnackbar({ open: true, message: buildNetworkError('la actualizacion del usuario'), severity: 'error' });
     } finally {
       setIsSavingUser(false);
@@ -632,14 +634,16 @@ export default function SettingsPage() {
     setIsDeletingUser(true);
 
     try {
-      const res = await fetch(`/api/proxy/delete-user/${user.id}`, {
+      const res = await fetchWithRetry(`/api/proxy/delete-user/${user.id}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+        cache: 'no-store',
+      }, 3, 500, { cache: false });
 
       if (res.ok) {
+        clearFetchCache();
         setSnackbar({ open: true, message: 'Usuario eliminado correctamente.', severity: 'success' });
         setUserDrawerOpen(false);
         fetchAdminData();
@@ -647,7 +651,7 @@ export default function SettingsPage() {
         const message = await buildRequestError(res, 'No pudimos eliminar el usuario.');
         setSnackbar({ open: true, message, severity: 'error' });
       }
-    } catch (error) {
+    } catch {
       setSnackbar({ open: true, message: buildNetworkError('la eliminacion del usuario'), severity: 'error' });
     } finally {
       setIsDeletingUser(false);
@@ -659,14 +663,16 @@ export default function SettingsPage() {
     setIsDeletingStudent(true);
 
     try {
-      const res = await fetch(`/api/proxy/delete-student/${student.id}`, {
+      const res = await fetchWithRetry(`/api/proxy/delete-student/${student.id}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+        cache: 'no-store',
+      }, 3, 500, { cache: false });
 
       if (res.ok) {
+        clearFetchCache();
         setSnackbar({ open: true, message: 'Estudiante eliminado correctamente.', severity: 'success' });
         setStudentDrawerOpen(false);
         fetchAdminData();
@@ -674,7 +680,7 @@ export default function SettingsPage() {
         const message = await buildRequestError(res, 'No pudimos eliminar el estudiante.');
         setSnackbar({ open: true, message, severity: 'error' });
       }
-    } catch (error) {
+    } catch {
       setSnackbar({ open: true, message: buildNetworkError('la eliminacion del estudiante'), severity: 'error' });
     } finally {
       setIsDeletingStudent(false);

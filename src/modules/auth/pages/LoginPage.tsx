@@ -3,6 +3,7 @@
 import React from 'react';
 import NextLink from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Typography,
@@ -33,6 +34,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
+  const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isWakingServer, setIsWakingServer] = React.useState(false);
@@ -49,6 +51,21 @@ const LoginPage = () => {
       password: '',
     },
   });
+
+  React.useEffect(() => {
+    router.prefetch('/dashboard');
+  }, [router]);
+
+  const warmDashboardCache = React.useCallback((token: string) => {
+    const headers = { Authorization: `Bearer ${token}` };
+
+    void Promise.allSettled([
+      fetchWithRetry('/api/proxy/dashboard/stats?period=Mes', { headers }),
+      fetchWithRetry('/api/proxy/programs', { headers }),
+      fetchWithRetry('/api/proxy/students', { headers }),
+      fetchWithRetry('/api/proxy/users', { headers }),
+    ]);
+  }, []);
 
   const onSubmit = async (data: LoginForm) => {
     setIsSubmitting(true);
@@ -80,8 +97,12 @@ const LoginPage = () => {
         const responseData = await response.json();
         if (responseData.access_token) {
           localStorage.setItem('auth_token', responseData.access_token);
+          warmDashboardCache(responseData.access_token);
+          router.replace('/dashboard');
+          return;
         }
-        window.location.href = '/dashboard';
+
+        setErrorSnackbar({ open: true, message: 'El servidor no envio una sesion valida. Intenta iniciar sesion nuevamente.' });
         return;
       }
 

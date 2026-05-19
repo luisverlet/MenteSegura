@@ -21,9 +21,10 @@ import GenericInput from '@/core/components/Input/GenericInput';
 import { usePagination } from '@/core/hooks/usePagination';
 import { FilterState, Student } from '@/core/types';
 import * as styles from './monitoring.styles';
-import { combineRisks, formatRisk, toTitleCase } from '@/core/utils/formatters';
+import { combineRisks, toTitleCase } from '@/core/utils/formatters';
 import { fetchWithRetry } from '@/core/utils/network';
 import { buildNetworkError, buildRequestError } from '@/core/utils/request-feedback';
+import { normalizeDateKeyFromIso, validateDateRangeInput } from '@/core/utils/date-time-validation';
 
 const defaultFilters: FilterState = {
   name: '',
@@ -33,6 +34,18 @@ const defaultFilters: FilterState = {
   startDate: '',
   endDate: '',
 };
+
+const extractPhqRisk = (item: any) =>
+  item?.latest_phq9?.risk ||
+  item?.latest_phq9?.classification ||
+  item?.phq_risk ||
+  item?.depression_risk;
+
+const extractGadRisk = (item: any) =>
+  item?.latest_gad7?.risk ||
+  item?.latest_gad7?.classification ||
+  item?.gad_risk ||
+  item?.anxiety_risk;
 
 const buildColumns = (onViewDetail: (id: number) => void) => [
   { id: 'name' as const, label: 'Nombre', align: 'left' as const, minWidth: 250 },
@@ -57,6 +70,7 @@ const MonitoringPage = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<FilterState>(defaultFilters);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
+  const [filterErrors, setFilterErrors] = useState<Partial<Pick<FilterState, 'startDate' | 'endDate'>>>({});
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState('');
@@ -82,46 +96,18 @@ const MonitoringPage = () => {
 
         if (res.ok) {
           const data = await res.json();
-          const items = data.items || [];
+          const items = data.items || data.data || [];
 
-          const detailEntries = await Promise.all(
-            items.map(async (item: any) => {
-              try {
-                const detailRes = await fetchWithRetry(`/api/proxy/students/${item.student_id}/evaluations`, {
-                  headers: { Authorization: `Bearer ${token}` }
-                });
+          const mappedStudents = items.map((item: any) => ({
+            id: item.student_id,
+            name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin nombre'),
+            code: item.student_code || 'N/A',
+            risk: combineRisks(extractPhqRisk(item), extractGadRisk(item), item.current_risk || item.risk),
+            date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad',
+            dateIso: item.last_evaluation_date || undefined
+          }));
 
-                if (!detailRes.ok) {
-                  return null;
-                }
-
-                return await detailRes.json();
-              } catch {
-                return null;
-              }
-            })
-          );
-
-          const mappedStudents = items.map((item: any, index: number) => {
-            const detail = detailEntries[index];
-            const phqRisk =
-              detail?.latest_phq9?.risk ||
-              detail?.latest_phq9?.classification ||
-              detail?.phq_risk;
-            const gadRisk =
-              detail?.latest_gad7?.risk ||
-              detail?.latest_gad7?.classification ||
-              detail?.gad_risk ||
-              detail?.anxiety_risk;
-
-            return {
-              id: item.student_id,
-              name: toTitleCase(`${item.name || ''} ${item.last_name || ''}`.trim() || 'Sin nombre'),
-              code: item.student_code || 'N/A',
-              risk: combineRisks(phqRisk, gadRisk, item.current_risk),
-              date: item.last_evaluation_date ? new Date(item.last_evaluation_date).toLocaleDateString() : 'Sin actividad'
-            };
-          });
+          setPageError('');
           setStudents(mappedStudents);
         } else {
           setPageError(await buildRequestError(res, 'No pudimos cargar los estudiantes para monitoreo.'));
@@ -137,20 +123,44 @@ const MonitoringPage = () => {
   }, []);
 
   const hasActiveFilters = Object.values(activeFilters).some((v) => v !== '');
-  const columns = buildColumns((id) => router.push(`/monitoring/${id}`));
+  const handleViewDetail = React.useCallback((id: number) => router.push(`/monitoring/${id}`), [router]);
+  const columns = React.useMemo(() => buildColumns(handleViewDetail), [handleViewDetail]);
 
-  const filteredData = students.filter((student) => {
-    if (activeFilters.name && !student.name.toLowerCase().includes(activeFilters.name.toLowerCase())) return false;
-    if (activeFilters.code && !student.code.includes(activeFilters.code)) return false;
-    return true;
-  });
+  const filteredData = React.useMemo(() => {
+    const dateRange = validateDateRangeInput(activeFilters.startDate, activeFilters.endDate);
 
-  const paginatedRows = filteredData.slice(
-    pagination.page * pagination.rowsPerPage,
-    pagination.page * pagination.rowsPerPage + pagination.rowsPerPage
+    return students.filter((student) => {
+      if (activeFilters.name && !student.name.toLowerCase().includes(activeFilters.name.toLowerCase())) return false;
+      if (activeFilters.code && !student.code.includes(activeFilters.code)) return false;
+
+      if (dateRange.isValid && (dateRange.startDateKey || dateRange.endDateKey)) {
+        const studentDateKey = normalizeDateKeyFromIso(student.dateIso);
+        if (!studentDateKey) return false;
+        if (dateRange.startDateKey && studentDateKey < dateRange.startDateKey) return false;
+        if (dateRange.endDateKey && studentDateKey > dateRange.endDateKey) return false;
+      }
+
+      return true;
+    });
+  }, [students, activeFilters]);
+
+  const paginatedRows = React.useMemo(
+    () => filteredData.slice(
+      pagination.page * pagination.rowsPerPage,
+      pagination.page * pagination.rowsPerPage + pagination.rowsPerPage
+    ),
+    [filteredData, pagination.page, pagination.rowsPerPage]
   );
 
   const applyFilters = () => {
+    const validation = validateDateRangeInput(draftFilters.startDate, draftFilters.endDate);
+    if (!validation.isValid) {
+      setFilterErrors({ [validation.field || 'startDate']: validation.message });
+      setSnackbar({ open: true, message: validation.message || 'Revisa las fechas de los filtros.', severity: 'warning' });
+      return;
+    }
+
+    setFilterErrors({});
     setActiveFilters(draftFilters);
     resetPage();
     setIsFilterOpen(false);
@@ -159,6 +169,7 @@ const MonitoringPage = () => {
   const clearFilters = () => {
     setDraftFilters(defaultFilters);
     setActiveFilters(defaultFilters);
+    setFilterErrors({});
     resetPage();
   };
 
@@ -250,8 +261,28 @@ const MonitoringPage = () => {
                 </Grid>
               </Grid>
             </Box>
-            <GenericInput labelTitle="Fecha de inicio" placeholder="DD/MM/AAAA" value={draftFilters.startDate} onChange={(e) => setDraftFilters((p) => ({ ...p, startDate: e.target.value }))} />
-            <GenericInput labelTitle="Fecha de fin" placeholder="DD/MM/AAAA" value={draftFilters.endDate} onChange={(e) => setDraftFilters((p) => ({ ...p, endDate: e.target.value }))} />
+            <GenericInput
+              labelTitle="Fecha de inicio"
+              placeholder="DD/MM/AAAA"
+              value={draftFilters.startDate}
+              error={!!filterErrors.startDate}
+              helperText={filterErrors.startDate}
+              onChange={(e) => {
+                setFilterErrors((current) => ({ ...current, startDate: undefined }));
+                setDraftFilters((p) => ({ ...p, startDate: e.target.value }));
+              }}
+            />
+            <GenericInput
+              labelTitle="Fecha de fin"
+              placeholder="DD/MM/AAAA"
+              value={draftFilters.endDate}
+              error={!!filterErrors.endDate}
+              helperText={filterErrors.endDate}
+              onChange={(e) => {
+                setFilterErrors((current) => ({ ...current, endDate: undefined }));
+                setDraftFilters((p) => ({ ...p, endDate: e.target.value }));
+              }}
+            />
 
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
               <Button variant="outlined" fullWidth sx={{ height: 52, borderRadius: '12px', fontWeight: 700 }} onClick={clearFilters}>
