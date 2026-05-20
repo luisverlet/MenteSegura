@@ -102,7 +102,7 @@ const DashboardPage = () => {
     const fetchDashboardData = async () => {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        setPageError('No encontramos una sesion activa para cargar el tablero.');
+        setPageError('No encontramos una sesión activa para cargar el tablero.');
         setIsLoading(false);
         return;
       }
@@ -126,7 +126,7 @@ const DashboardPage = () => {
           const programsData = await programsRes.json();
           setPrograms(normalizePrograms(programsData));
         } else {
-          errors.push(await buildRequestError(programsRes, 'No pudimos cargar los programas academicos.'));
+          errors.push(await buildRequestError(programsRes, 'No pudimos cargar los programas académicos.'));
         }
 
         if (studentsRes.ok) {
@@ -146,7 +146,7 @@ const DashboardPage = () => {
             activeUsers: users.filter((user: any) => (Array.isArray(user) ? user[5] : user?.status) === 'activo').length,
           }));
         } else {
-          errors.push(await buildRequestError(usersRes, 'No pudimos cargar la informacion de usuarios.'));
+          errors.push(await buildRequestError(usersRes, 'No pudimos cargar la información de usuarios.'));
         }
 
         if (statsRes.ok) {
@@ -169,7 +169,7 @@ const DashboardPage = () => {
 
           setBarData(formattedBarData.length > 0 ? formattedBarData : [{ name: 'Sin datos', value: 0, value2: 0 }]);
         } else {
-          errors.push(await buildRequestError(statsRes, 'No pudimos cargar la informacion filtrada del tablero.'));
+          errors.push(await buildRequestError(statsRes, 'No pudimos cargar la información filtrada del tablero.'));
         }
 
         if (errors.length > 0) {
@@ -180,7 +180,7 @@ const DashboardPage = () => {
         }
       } catch (error) {
         console.error('Error fetching dashboard stats', error);
-        setPageError(buildNetworkError('la informacion del tablero'));
+        setPageError(buildNetworkError('la información del tablero'));
       } finally {
         setIsLoading(false);
       }
@@ -340,7 +340,7 @@ const DashboardPage = () => {
           </TextField>
 
           <TextField
-            label="Programa academico"
+            label="Programa académico"
             select
             value={draftFilters.program}
             onChange={(e) => setDraftFilters((current) => ({ ...current, program: e.target.value }))}

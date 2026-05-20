@@ -17,15 +17,15 @@ export async function buildRequestError(response: Response, fallback: string) {
   const message = await extractResponseMessage(response);
 
   if ([401, 403].includes(response.status)) {
-    return 'Tu sesion no es valida o no tienes permisos para consultar esta informacion.';
+    return 'Tu sesión no es válida o no tienes permisos para consultar esta información.';
   }
 
   if (response.status === 404) {
-    return message || 'No encontramos la informacion solicitada.';
+    return message || 'No encontramos la información solicitada.';
   }
 
   if (response.status === 422) {
-    return message || 'Los datos recibidos no son validos para procesar esta solicitud.';
+    return message || 'Los datos recibidos no son válidos para procesar esta solicitud.';
   }
 
   if ([429].includes(response.status)) {
@@ -33,16 +33,16 @@ export async function buildRequestError(response: Response, fallback: string) {
   }
 
   if ([502, 503, 504].includes(response.status)) {
-    return 'El servidor de Render se esta iniciando. Espera un momento e intentalo de nuevo.';
+    return 'El servidor de Render se está iniciando. Espera un momento e inténtalo de nuevo.';
   }
 
   if (response.status >= 500) {
-    return message || 'Ocurrio un problema en el servidor. Intenta nuevamente en unos minutos.';
+    return message || 'Ocurrió un problema en el servidor. Intenta nuevamente en unos minutos.';
   }
 
   return message || fallback;
 }
 
 export function buildNetworkError(context: string) {
-  return `No pudimos cargar ${context}. Verifica tu conexion e intentalo nuevamente.`;
+  return `No pudimos cargar ${context}. Verifica tu conexión e inténtalo nuevamente.`;
 }

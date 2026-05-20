@@ -26,11 +26,11 @@ import { extractAuthError, mapAuthNetworkError } from '@/modules/auth/utils/auth
 const registerSchema = z.object({
   firstName: z.string().min(2, 'El nombre es obligatorio'),
   lastName: z.string().min(2, 'Los apellidos son obligatorios'),
-  email: z.string().email('Email invalido'),
-  password: z.string().min(6, 'Minimo 6 caracteres'),
-  confirmPassword: z.string().min(6, 'Minimo 6 caracteres'),
+  email: z.string().email('Correo electrónico inválido'),
+  password: z.string().min(6, 'Mínimo 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Mínimo 6 caracteres'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'Las contrasenas no coinciden',
+  message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
 });
 
@@ -93,7 +93,7 @@ const RegisterPage = () => {
       <Card sx={styles.registerCardStyles}>
         <Box sx={styles.formPanelStyles}>
           <Typography variant="h4" sx={styles.stepTitleStyles}>
-            Creacion de cuenta
+            Creación de cuenta
           </Typography>
 
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -146,7 +146,7 @@ const RegisterPage = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Correo electronico
+                    Correo electrónico
                   </Typography>
                   <TextField
                     {...register('email')}
@@ -164,7 +164,7 @@ const RegisterPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Contrasena
+                    Contraseña
                   </Typography>
                   <TextField
                     {...register('password')}
@@ -188,7 +188,7 @@ const RegisterPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                    Repetir contrasena
+                    Repetir contraseña
                   </Typography>
                   <TextField
                     {...register('confirmPassword')}
@@ -217,9 +217,9 @@ const RegisterPage = () => {
             )}
 
             <Typography variant="body2" sx={{ textAlign: 'center', mt: 4, fontWeight: 600, color: '#64748B' }}>
-              Ya tienes cuenta?{' '}
+              ¿Ya tienes cuenta?{' '}
               <Link component={NextLink} href="/login" sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
-                Inicia sesion
+                Inicia sesión
               </Link>
             </Typography>
           </form>
@@ -228,7 +228,7 @@ const RegisterPage = () => {
         <Box sx={styles.illustrationPanelStyles}>
           <Image
             src="/assets/creation.svg"
-            alt="Ilustracion de registro"
+            alt="Ilustración de registro"
             width={550}
             height={550}
             priority

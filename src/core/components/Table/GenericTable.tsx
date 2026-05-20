@@ -138,8 +138,8 @@ const GenericTable = <T extends { id: string | number }>({
         page={safePage}
         onPageChange={(e, p) => onPageChange?.(e, p)}
         onRowsPerPageChange={(e) => onRowsPerPageChange?.(e)}
-        labelRowsPerPage="Filas por pagina:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `mas de ${to}`}`}
+        labelRowsPerPage="Filas por página:"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
         sx={{
           borderTop: '1px solid #F1F5F9',
           backgroundColor: '#FFFFFF !important',

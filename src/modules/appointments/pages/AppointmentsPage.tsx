@@ -135,13 +135,13 @@ const columns = (onManage: (appointment: Appointment) => void) => [
   { id: 'studentName' as const, label: 'Estudiante', align: 'left' as const, minWidth: 220 },
   {
     id: 'riskSummary' as const,
-    label: 'Ultimo nivel de riesgo',
+    label: 'Último nivel de riesgo',
     align: 'left' as const,
     minWidth: 220,
   },
   {
     id: 'actions' as const,
-    label: 'Accion',
+    label: 'Acción',
     align: 'center' as const,
     minWidth: 140,
     format: (_: unknown, row: Appointment) => (
@@ -183,7 +183,7 @@ const AppointmentsPage = () => {
   const fetchAppointments = React.useCallback(async () => {
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      setPageError('No encontramos una sesion activa para consultar las citas.');
+      setPageError('No encontramos una sesión activa para consultar las citas.');
       setIsLoading(false);
       return;
     }
@@ -366,7 +366,7 @@ const AppointmentsPage = () => {
 
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      setSnackbar({ open: true, message: 'No encontramos una sesion activa para actualizar la cita.', severity: 'error' });
+      setSnackbar({ open: true, message: 'No encontramos una sesión activa para actualizar la cita.', severity: 'error' });
       return;
     }
 
@@ -400,7 +400,7 @@ const AppointmentsPage = () => {
         setSnackbar({ open: true, message: await buildRequestError(response, 'No pudimos actualizar la cita.'), severity: 'error' });
       }
     } catch {
-      setSnackbar({ open: true, message: buildNetworkError('la actualizacion de la cita'), severity: 'error' });
+      setSnackbar({ open: true, message: buildNetworkError('la actualización de la cita'), severity: 'error' });
     } finally {
       setIsSavingAppointment(false);
     }
@@ -411,7 +411,7 @@ const AppointmentsPage = () => {
 
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      setSnackbar({ open: true, message: 'No encontramos una sesion activa para eliminar la cita.', severity: 'error' });
+      setSnackbar({ open: true, message: 'No encontramos una sesión activa para eliminar la cita.', severity: 'error' });
       return;
     }
 
@@ -433,7 +433,7 @@ const AppointmentsPage = () => {
         setSnackbar({ open: true, message: await buildRequestError(response, 'No pudimos eliminar la cita.'), severity: 'error' });
       }
     } catch {
-      setSnackbar({ open: true, message: buildNetworkError('la eliminacion de la cita'), severity: 'error' });
+      setSnackbar({ open: true, message: buildNetworkError('la eliminación de la cita'), severity: 'error' });
     } finally {
       setIsDeletingAppointment(false);
     }

@@ -37,9 +37,9 @@ const defaultExportOptions: ExportOptions = {
 
 const columns = [
   { id: 'name' as const, label: 'Nombre', align: 'left' as const, minWidth: 220 },
-  { id: 'code' as const, label: 'Codigo UDES', align: 'center' as const, minWidth: 150 },
-  { id: 'risk' as const, label: 'Ultimo nivel de riesgo', align: 'center' as const, minWidth: 180 },
-  { id: 'date' as const, label: 'Fecha de ultima actividad', align: 'center' as const, minWidth: 200 },
+  { id: 'code' as const, label: 'Código UDES', align: 'center' as const, minWidth: 150 },
+  { id: 'risk' as const, label: 'Último nivel de riesgo', align: 'center' as const, minWidth: 180 },
+  { id: 'date' as const, label: 'Fecha de última actividad', align: 'center' as const, minWidth: 200 },
 ];
 
 const ExportCheckRow = ({
@@ -62,7 +62,7 @@ const ExportCheckRow = ({
             sx={{ color: '#4F8CFF', '&.Mui-checked': { color: '#4F8CFF' } }}
           />
         }
-        label={<Typography sx={{ fontWeight: 600, fontSize: '14px' }}>Si</Typography>}
+        label={<Typography sx={{ fontWeight: 600, fontSize: '14px' }}>Sí</Typography>}
       />
       <FormControlLabel
         control={
@@ -97,7 +97,7 @@ const ReportsPage = () => {
     const fetchStudents = async () => {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        setPageError('No encontramos una sesion activa para consultar los reportes.');
+        setPageError('No encontramos una sesión activa para consultar los reportes.');
         setIsLoading(false);
         return;
       }
@@ -210,7 +210,7 @@ const ReportsPage = () => {
       setExportOpen(false);
     } catch (error) {
       console.error('Error en exportacion', error);
-      setSnackbar({ open: true, message: 'Error de conexion al exportar.', severity: 'error' });
+      setSnackbar({ open: true, message: 'Error de conexión al exportar.', severity: 'error' });
     } finally {
       setIsExporting(false);
     }

@@ -27,8 +27,8 @@ import { fetchWithRetry } from '@/core/utils/network';
 import { extractAuthError, mapAuthNetworkError } from '@/modules/auth/utils/auth-feedback';
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'El correo electronico es obligatorio').email('Email invalido'),
-  password: z.string().min(6, 'La contrasena debe tener al menos 6 caracteres'),
+  email: z.string().min(1, 'El correo electrónico es obligatorio').email('Correo electrónico inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -102,14 +102,14 @@ const LoginPage = () => {
           return;
         }
 
-        setErrorSnackbar({ open: true, message: 'El servidor no envio una sesion valida. Intenta iniciar sesion nuevamente.' });
+        setErrorSnackbar({ open: true, message: 'El servidor no envió una sesión válida. Intenta iniciar sesión nuevamente.' });
         return;
       }
 
       const { userMessage } = await extractAuthError(response);
       setErrorSnackbar({ open: true, message: userMessage });
     } catch (error) {
-      console.error('Error de inicio de sesion', error);
+      console.error('Error de inicio de sesión', error);
       setErrorSnackbar({ open: true, message: mapAuthNetworkError('login') });
     } finally {
       setIsSubmitting(false);
@@ -127,7 +127,7 @@ const LoginPage = () => {
         <Box sx={styles.illustrationPanelStyles}>
           <Image
             src="/assets/login.svg"
-            alt="Ilustracion de inicio de sesion"
+            alt="Ilustración de inicio de sesión"
             width={550}
             height={550}
             priority
@@ -150,7 +150,7 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                Correo electronico
+                Correo electrónico
               </Typography>
               <TextField
                 {...register('email')}
@@ -172,7 +172,7 @@ const LoginPage = () => {
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                Contrasena
+                Contraseña
               </Typography>
               <TextField
                 {...register('password')}
@@ -202,16 +202,16 @@ const LoginPage = () => {
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 4 }}>
               <Link component={NextLink} href="/forgot-password" sx={{ fontWeight: 700, fontSize: '14px', color: '#4F8CFF', textDecoration: 'none' }}>
-                Olvidaste tu contrasena?
+                ¿Olvidaste tu contraseña?
               </Link>
             </Box>
 
             <Button type="submit" variant="contained" fullWidth sx={styles.loginButtonStyles} disabled={isSubmitting}>
-              {isSubmitting ? 'Ingresando...' : 'Iniciar sesion'}
+              {isSubmitting ? 'Ingresando...' : 'Iniciar sesión'}
             </Button>
 
             <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, color: '#64748B', mt: 3 }}>
-              No tienes cuenta?{' '}
+              ¿No tienes cuenta?{' '}
               <Link component={NextLink} href="/register" sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 800 }}>
                 Crea una
               </Link>

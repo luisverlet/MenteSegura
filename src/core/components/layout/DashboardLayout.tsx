@@ -20,7 +20,7 @@ const pathMapping: Record<string, string> = {
   monitoring: 'Monitoreo',
   appointments: 'Citas',
   reports: 'Reportes',
-  settings: 'Configuracion',
+  settings: 'Configuración',
   'dev-register': 'Registro Dev',
 };
 
@@ -154,7 +154,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         <Box sx={{ mt: 'auto', pt: 6, pb: 3, textAlign: 'center' }}>
           <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: { xs: '9px', md: '11px' }, px: 2, display: 'block' }}>
-            Todos los datos aqui registrados unicamente pueden ser visualizados por el personal competente de la universidad de Santander.
+            Todos los datos aquí registrados únicamente pueden ser visualizados por el personal competente de la universidad de Santander.
           </Typography>
         </Box>
       </Box>

@@ -49,12 +49,12 @@ const extractGadRisk = (item: any) =>
 
 const buildColumns = (onViewDetail: (id: number) => void) => [
   { id: 'name' as const, label: 'Nombre', align: 'left' as const, minWidth: 250 },
-  { id: 'code' as const, label: 'Codigo UDES', align: 'center' as const, minWidth: 150 },
-  { id: 'risk' as const, label: 'Ultimo nivel de riesgo', align: 'center' as const, minWidth: 180 },
-  { id: 'date' as const, label: 'Fecha de ultima actividad', align: 'center' as const, minWidth: 200 },
+  { id: 'code' as const, label: 'Código UDES', align: 'center' as const, minWidth: 150 },
+  { id: 'risk' as const, label: 'Último nivel de riesgo', align: 'center' as const, minWidth: 180 },
+  { id: 'date' as const, label: 'Fecha de última actividad', align: 'center' as const, minWidth: 200 },
   {
     id: 'actions' as const,
-    label: 'Accion',
+    label: 'Acción',
     align: 'center' as const,
     format: (_: unknown, row: Student) => (
       <Box component="span" onClick={() => onViewDetail(row.id)} sx={{ ...styles.detailLinkStyles, cursor: 'pointer' }}>
@@ -84,7 +84,7 @@ const MonitoringPage = () => {
     const fetchStudents = async () => {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        setPageError('No encontramos una sesion activa para consultar el monitoreo.');
+        setPageError('No encontramos una sesión activa para consultar el monitoreo.');
         setIsLoading(false);
         return;
       }
@@ -176,7 +176,7 @@ const MonitoringPage = () => {
   return (
     <DashboardLayout
       title="Monitoreo Estudiantil"
-      subtitle="Busqueda y listado"
+      subtitle="Búsqueda y listado"
       Icon={Monitor}
       onRightActionClick={() => setIsFilterOpen(true)}
     >
@@ -243,8 +243,8 @@ const MonitoringPage = () => {
               InputProps={{ endAdornment: <InputAdornment position="end"><Search size={18} /></InputAdornment> }}
             />
             <GenericInput
-              labelTitle="Codigo"
-              placeholder="Buscar codigo"
+              labelTitle="Código"
+              placeholder="Buscar código"
               value={draftFilters.code}
               onChange={(e) => setDraftFilters((p) => ({ ...p, code: e.target.value }))}
             />

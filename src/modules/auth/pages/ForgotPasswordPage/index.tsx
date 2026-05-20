@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { extractAuthError, mapAuthNetworkError } from '@/modules/auth/utils/auth-feedback';
 
 const forgotSchema = z.object({
-  email: z.string().min(1, 'El correo electronico es obligatorio').email('Email invalido'),
+  email: z.string().min(1, 'El correo electrónico es obligatorio').email('Correo electrónico inválido'),
   recoveryCode: z.string().optional(),
   newPassword: z.string().optional(),
   confirmPassword: z.string().optional(),
@@ -67,7 +67,7 @@ const ForgotPasswordPage = () => {
 
         if (response.ok) {
           setStep(2);
-          setSuccessSnackbar({ open: true, message: 'Enviamos un codigo de recuperacion a tu correo.' });
+          setSuccessSnackbar({ open: true, message: 'Enviamos un código de recuperación a tu correo.' });
           return;
         }
 
@@ -77,17 +77,17 @@ const ForgotPasswordPage = () => {
       }
 
       if (!data.recoveryCode?.trim()) {
-        setErrorSnackbar({ open: true, message: 'Ingresa el codigo de recuperacion.' });
+        setErrorSnackbar({ open: true, message: 'Ingresa el código de recuperación.' });
         return;
       }
 
       if (!data.newPassword || data.newPassword.length < 6) {
-        setErrorSnackbar({ open: true, message: 'La nueva contrasena debe tener al menos 6 caracteres.' });
+        setErrorSnackbar({ open: true, message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
         return;
       }
 
       if (data.newPassword !== data.confirmPassword) {
-        setErrorSnackbar({ open: true, message: 'La confirmacion de la nueva contrasena no coincide.' });
+        setErrorSnackbar({ open: true, message: 'La confirmación de la nueva contraseña no coincide.' });
         return;
       }
 
@@ -102,7 +102,7 @@ const ForgotPasswordPage = () => {
       });
 
       if (response.ok) {
-        setSuccessSnackbar({ open: true, message: 'Tu contrasena fue restablecida correctamente.' });
+        setSuccessSnackbar({ open: true, message: 'Tu contraseña fue restablecida correctamente.' });
         setTimeout(() => {
           router.push('/login');
         }, 1200);
@@ -125,7 +125,7 @@ const ForgotPasswordPage = () => {
   const handleResendCode = async () => {
     const email = getValues('email');
     if (!email) {
-      setErrorSnackbar({ open: true, message: 'Ingresa tu correo antes de reenviar el codigo.' });
+      setErrorSnackbar({ open: true, message: 'Ingresa tu correo antes de reenviar el código.' });
       return;
     }
 
@@ -138,7 +138,7 @@ const ForgotPasswordPage = () => {
       });
 
       if (response.ok) {
-        setSuccessSnackbar({ open: true, message: 'Reenviamos el codigo a tu correo.' });
+        setSuccessSnackbar({ open: true, message: 'Reenviamos el código a tu correo.' });
         return;
       }
 
@@ -165,19 +165,19 @@ const ForgotPasswordPage = () => {
       <Card sx={styles.forgotCardStyles}>
         <Box sx={styles.formPanelStyles}>
           <Typography variant="h5" sx={{ fontWeight: 800, textAlign: 'center', mb: 1, color: '#1E293B' }}>
-            Recuperar contrasena
+            Recuperar contraseña
           </Typography>
           <Typography variant="body2" sx={{ textAlign: 'center', color: '#64748B', mb: 4, px: 2 }}>
             {step === 1
-              ? 'Ingresa tu correo electronico para recibir un codigo de recuperacion.'
-              : 'Ingresa el codigo recibido y define tu nueva contrasena.'}
+              ? 'Ingresa tu correo electrónico para recibir un código de recuperación.'
+              : 'Ingresa el código recibido y define tu nueva contraseña.'}
           </Typography>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                  Correo electronico
+                  Correo electrónico
                 </Typography>
                 <TextField
                   {...register('email')}
@@ -199,7 +199,7 @@ const ForgotPasswordPage = () => {
                 <>
                   <Box>
                     <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                      Codigo de recuperacion
+                      Código de recuperación
                     </Typography>
                     <TextField
                       {...register('recoveryCode')}
@@ -219,12 +219,12 @@ const ForgotPasswordPage = () => {
 
                   <Box>
                     <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                      Nueva contrasena
+                      Nueva contraseña
                     </Typography>
                     <TextField
                       {...register('newPassword')}
                       type="password"
-                      placeholder="Minimo 6 caracteres"
+                      placeholder="Mínimo 6 caracteres"
                       error={!!errors.newPassword}
                       helperText={errors.newPassword?.message}
                       disabled={isSubmitting}
@@ -240,12 +240,12 @@ const ForgotPasswordPage = () => {
 
                   <Box>
                     <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', mb: 1, display: 'block' }}>
-                      Confirmar nueva contrasena
+                      Confirmar nueva contraseña
                     </Typography>
                     <TextField
                       {...register('confirmPassword')}
                       type="password"
-                      placeholder="Repite tu nueva contrasena"
+                      placeholder="Repite tu nueva contraseña"
                       error={!!errors.confirmPassword}
                       helperText={errors.confirmPassword?.message}
                       disabled={isSubmitting}
@@ -275,19 +275,19 @@ const ForgotPasswordPage = () => {
                       color: '#4F8CFF',
                     }}
                   >
-                    {isResending ? 'Reenviando...' : 'Reenviar codigo'}
+                    {isResending ? 'Reenviando...' : 'Reenviar código'}
                   </Button>
                 </>
               )}
 
               <Button type="submit" variant="contained" fullWidth disabled={isSubmitting} sx={styles.buttonStyles}>
-                {isSubmitting ? 'Procesando...' : step === 1 ? 'Enviar codigo' : 'Restablecer contrasena'}
+                {isSubmitting ? 'Procesando...' : step === 1 ? 'Enviar código' : 'Restablecer contraseña'}
               </Button>
 
               <Typography variant="body2" sx={{ textAlign: 'center', mt: 2 }}>
                 <NextLink href="/login" passHref legacyBehavior>
                   <Link sx={{ color: '#4F8CFF', textDecoration: 'none', fontWeight: 700 }}>
-                    Volver al inicio de sesion
+                    Volver al inicio de sesión
                   </Link>
                 </NextLink>
               </Typography>
@@ -298,7 +298,7 @@ const ForgotPasswordPage = () => {
         <Box sx={styles.illustrationPanelStyles}>
           <Image
             src="/assets/Recovery.svg"
-            alt="Ilustracion de recuperacion"
+            alt="Ilustración de recuperación"
             width={550}
             height={550}
             priority

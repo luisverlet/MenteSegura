@@ -49,7 +49,7 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
     const fetchStudent = async () => {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        setPageError('No encontramos una sesion activa para consultar el detalle del estudiante.');
+        setPageError('No encontramos una sesión activa para consultar el detalle del estudiante.');
         setIsLoading(false);
         return;
       }
@@ -64,9 +64,9 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
 
         const errors: string[] = [];
         if (!studentsRes.ok) errors.push(await buildRequestError(studentsRes, 'No pudimos cargar la lista de estudiantes.'));
-        if (!usersRes.ok) errors.push(await buildRequestError(usersRes, 'No pudimos cargar la informacion de usuarios.'));
+        if (!usersRes.ok) errors.push(await buildRequestError(usersRes, 'No pudimos cargar la información de usuarios.'));
         if (!evalsRes.ok) errors.push(await buildRequestError(evalsRes, 'No pudimos cargar el historial del estudiante.'));
-        if (!programsRes.ok) errors.push(await buildRequestError(programsRes, 'No pudimos cargar los programas academicos.'));
+        if (!programsRes.ok) errors.push(await buildRequestError(programsRes, 'No pudimos cargar los programas académicos.'));
 
         if (errors.length > 0) {
           setPageError(errors[0]);
@@ -155,7 +155,7 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
     if (studentId) {
       fetchStudent();
     } else {
-      setPageError('No recibimos un identificador valido para consultar el estudiante.');
+      setPageError('No recibimos un identificador válido para consultar el estudiante.');
       setIsLoading(false);
     }
   }, [studentId]);
@@ -167,7 +167,7 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
   ];
 
   return (
-    <DashboardLayout title="Detalle del estudiante" subtitle="Gestion individual" Icon={Monitor}>
+    <DashboardLayout title="Detalle del estudiante" subtitle="Gestión individual" Icon={Monitor}>
       <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 250px)' }}>
         <Card sx={styles.detailCardStyles}>
           {pageError && (
@@ -184,7 +184,7 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
           {view === 'detail' ? (
             <Box sx={{ width: '100%' }}>
               {isLoading ? (
-                <Typography>Cargando informacion...</Typography>
+                <Typography>Cargando información...</Typography>
               ) : !student ? (
                 <Typography>Estudiante no encontrado</Typography>
               ) : (
@@ -192,8 +192,8 @@ const StudentDetailPage = ({ studentId }: { studentId?: string }) => {
                   <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 6 }}>
                     <Box sx={{ flex: 1 }}>
                       <InfoItem label="Nombre" value={`${student.name || ''} ${student.last_name || ''}`} />
-                      <InfoItem label="Programa Academico" value={student.program || 'N/A'} />
-                      <InfoItem label="Codigo" value={student.student_code || student.code || 'N/A'} />
+                      <InfoItem label="Programa Académico" value={student.program || 'N/A'} />
+                      <InfoItem label="Código" value={student.student_code || student.code || 'N/A'} />
                       <InfoItem label="Correo institucional" value={student.email || 'N/A'} />
                       <InfoItem label="Contacto" value={student.contact || 'No disponible'} />
                     </Box>

@@ -47,7 +47,7 @@ const VerifyEmailPage = () => {
       });
 
       if (response.ok) {
-        setSuccessSnackbar({ open: true, message: 'Correo verificado con exito. Ahora puedes iniciar sesion.' });
+        setSuccessSnackbar({ open: true, message: 'Correo verificado con éxito. Ahora puedes iniciar sesión.' });
         router.push('/login');
         return;
       }
@@ -72,7 +72,7 @@ const VerifyEmailPage = () => {
       });
 
       if (response.ok) {
-        setSuccessSnackbar({ open: true, message: 'Hemos reenviado el codigo a tu correo.' });
+        setSuccessSnackbar({ open: true, message: 'Hemos reenviado el código a tu correo.' });
         return;
       }
 
@@ -88,10 +88,10 @@ const VerifyEmailPage = () => {
     <Box sx={styles.pageWrapperStyles}>
       <Box sx={styles.verifyCardStyles}>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
-          Verificar correo electronico
+          Verificar correo electrónico
         </Typography>
         <Typography variant="body1" sx={{ color: '#64748B', mb: 4 }}>
-          Ingresa el codigo enviado a tu correo
+          Ingresa el código enviado a tu correo
         </Typography>
 
         <Box sx={styles.codeInputContainerStyles}>
@@ -122,7 +122,7 @@ const VerifyEmailPage = () => {
         </Box>
 
         <Button variant="contained" sx={styles.verifyButtonStyles} onClick={handleVerify} disabled={code.some((digit) => !digit)}>
-          Verificar codigo
+          Verificar código
         </Button>
 
         <Box sx={{ mt: 4 }}>
@@ -130,7 +130,7 @@ const VerifyEmailPage = () => {
             Espera <span style={{ fontWeight: 700, color: '#1E293B' }}>30</span> segundos antes de reenviar
           </Typography>
           <Typography variant="body2" sx={{ mt: 1, fontWeight: 700 }}>
-            No llego el codigo? <Link href="#" onClick={handleResend} sx={{ color: '#4F8CFF', textDecoration: 'none' }}>Reenviar</Link>
+            ¿No llegó el código? <Link href="#" onClick={handleResend} sx={{ color: '#4F8CFF', textDecoration: 'none' }}>Reenviar</Link>
           </Typography>
         </Box>
       </Box>

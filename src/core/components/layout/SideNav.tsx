@@ -55,7 +55,7 @@ const SideNav = () => {
       }}
     >
       <Box sx={{ order: { xs: 1, md: 0 }, mb: { xs: 0, md: 4 }, ml: { xs: 1, md: 0 } }}>
-        <Tooltip title="Cerrar sesion" placement="right">
+        <Tooltip title="Cerrar sesión" placement="right">
           <IconButton
             onClick={handleLogout}
             sx={{
@@ -118,7 +118,7 @@ const SideNav = () => {
           mr: { xs: 1, md: 0 }
         }}
       >
-        <Tooltip title="Configuracion" placement="right">
+        <Tooltip title="Configuración" placement="right">
           <IconButton
             onClick={() => handleNavigate('/settings')}
             sx={{

@@ -303,7 +303,7 @@ export default function SettingsPage() {
   const fetchProfileData = async () => {
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      setProfileError('No encontramos una sesion activa para cargar tu perfil.');
+      setProfileError('No encontramos una sesión activa para cargar tu perfil.');
       setIsLoadingProfile(false);
       return;
     }
@@ -320,7 +320,7 @@ export default function SettingsPage() {
         const loggedUser = resolveLoggedUser(parsedUsers, token);
         setProfileUser(loggedUser);
         if (!loggedUser) {
-          setProfileError('No pudimos identificar el usuario de la sesion actual.');
+          setProfileError('No pudimos identificar el usuario de la sesión actual.');
         }
       } else {
         setProfileError(await buildRequestError(usersRes, 'No pudimos cargar tu perfil.'));
@@ -336,7 +336,7 @@ export default function SettingsPage() {
   const fetchAdminData = async () => {
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      setSnackbar({ open: true, message: 'No encontramos una sesion activa para cargar la administracion.', severity: 'error' });
+      setSnackbar({ open: true, message: 'No encontramos una sesión activa para cargar la administración.', severity: 'error' });
       return;
     }
 
@@ -397,7 +397,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error(error);
-      setSnackbar({ open: true, message: buildNetworkError('los datos de administracion'), severity: 'error' });
+      setSnackbar({ open: true, message: buildNetworkError('los datos de administración'), severity: 'error' });
     } finally {
       setIsLoadingAdmin(false);
     }
@@ -434,11 +434,11 @@ export default function SettingsPage() {
         reset();
         fetchAdminData();
       } else {
-        const message = await buildRequestError(res, 'No pudimos crear el programa academico.');
+        const message = await buildRequestError(res, 'No pudimos crear el programa académico.');
         setStatus({ type: 'error', msg: message });
       }
     } catch {
-      setStatus({ type: 'error', msg: buildNetworkError('la creacion del programa') });
+      setStatus({ type: 'error', msg: buildNetworkError('la creación del programa') });
     }
   };
 
@@ -465,7 +465,7 @@ export default function SettingsPage() {
         setStatus({ type: 'error', msg: message });
       }
     } catch {
-      setStatus({ type: 'error', msg: buildNetworkError('la creacion de la facultad') });
+      setStatus({ type: 'error', msg: buildNetworkError('la creación de la facultad') });
     }
   };
 
@@ -492,17 +492,17 @@ export default function SettingsPage() {
 
     if (editingOwnProfile && (passwordForm.current_password || passwordForm.new_password || passwordForm.confirm_password)) {
       if (!passwordForm.current_password || !passwordForm.new_password || !passwordForm.confirm_password) {
-        setSnackbar({ open: true, message: 'Completa todos los campos de contrasena para actualizarla.', severity: 'error' });
+        setSnackbar({ open: true, message: 'Completa todos los campos de contraseña para actualizarla.', severity: 'error' });
         return;
       }
 
       if (passwordForm.new_password.length < 6) {
-        setSnackbar({ open: true, message: 'La nueva contrasena debe tener al menos 6 caracteres.', severity: 'error' });
+        setSnackbar({ open: true, message: 'La nueva contraseña debe tener al menos 6 caracteres.', severity: 'error' });
         return;
       }
 
       if (passwordForm.new_password !== passwordForm.confirm_password) {
-        setSnackbar({ open: true, message: 'La confirmacion de la nueva contrasena no coincide.', severity: 'error' });
+        setSnackbar({ open: true, message: 'La confirmación de la nueva contraseña no coincide.', severity: 'error' });
         return;
       }
     }
@@ -539,7 +539,7 @@ export default function SettingsPage() {
           });
 
           if (!passwordResponse.ok) {
-            const message = await buildRequestError(passwordResponse, 'No pudimos actualizar la contrasena.');
+            const message = await buildRequestError(passwordResponse, 'No pudimos actualizar la contraseña.');
             setSnackbar({ open: true, message, severity: 'error' });
             return;
           }
@@ -548,7 +548,7 @@ export default function SettingsPage() {
         setSnackbar({
           open: true,
           message: editingOwnProfile
-            ? (passwordForm.new_password ? 'Tu perfil y contrasena fueron actualizados correctamente.' : 'Tu perfil fue actualizado correctamente.')
+            ? (passwordForm.new_password ? 'Tu perfil y contraseña fueron actualizados correctamente.' : 'Tu perfil fue actualizado correctamente.')
             : 'Usuario actualizado correctamente.',
           severity: 'success'
         });
@@ -567,7 +567,7 @@ export default function SettingsPage() {
         setSnackbar({ open: true, message, severity: 'error' });
       }
     } catch {
-      setSnackbar({ open: true, message: buildNetworkError('la actualizacion del usuario'), severity: 'error' });
+      setSnackbar({ open: true, message: buildNetworkError('la actualización del usuario'), severity: 'error' });
     } finally {
       setIsSavingUser(false);
     }
@@ -576,10 +576,10 @@ export default function SettingsPage() {
   const requestUpdateConfirmation = () => {
     setConfirmDialog({
       open: true,
-      title: editingOwnProfile ? 'Confirmar actualizacion de perfil' : 'Confirmar actualizacion de usuario',
+      title: editingOwnProfile ? 'Confirmar actualización de perfil' : 'Confirmar actualización de usuario',
       message: editingOwnProfile
-        ? 'Se guardaran los cambios de tu perfil. Confirma para continuar.'
-        : 'Se guardaran los cambios del usuario seleccionado. Confirma para continuar.',
+        ? 'Se guardarán los cambios de tu perfil. Confirma para continuar.'
+        : 'Se guardarán los cambios del usuario seleccionado. Confirma para continuar.',
       confirmLabel: 'Confirmar cambios',
       intent: 'primary',
       action: 'update-user',
@@ -590,8 +590,8 @@ export default function SettingsPage() {
     setSelectedUser(user);
     setConfirmDialog({
       open: true,
-      title: 'Confirmar eliminacion de usuario',
-      message: `Se eliminara la cuenta de ${`${user.name} ${user.last_name}`.trim()}. Esta accion no se puede deshacer.`,
+      title: 'Confirmar eliminación de usuario',
+      message: `Se eliminará la cuenta de ${`${user.name} ${user.last_name}`.trim()}. Esta acción no se puede deshacer.`,
       confirmLabel: 'Eliminar usuario',
       intent: 'danger',
       action: 'delete-user',
@@ -602,8 +602,8 @@ export default function SettingsPage() {
     setSelectedStudent(student);
     setConfirmDialog({
       open: true,
-      title: 'Confirmar eliminacion de estudiante',
-      message: `Se eliminara el estudiante ${student.name}. Esta accion no se puede deshacer.`,
+      title: 'Confirmar eliminación de estudiante',
+      message: `Se eliminará el estudiante ${student.name}. Esta acción no se puede deshacer.`,
       confirmLabel: 'Eliminar estudiante',
       intent: 'danger',
       action: 'delete-student',
@@ -652,7 +652,7 @@ export default function SettingsPage() {
         setSnackbar({ open: true, message, severity: 'error' });
       }
     } catch {
-      setSnackbar({ open: true, message: buildNetworkError('la eliminacion del usuario'), severity: 'error' });
+      setSnackbar({ open: true, message: buildNetworkError('la eliminación del usuario'), severity: 'error' });
     } finally {
       setIsDeletingUser(false);
     }
@@ -681,14 +681,14 @@ export default function SettingsPage() {
         setSnackbar({ open: true, message, severity: 'error' });
       }
     } catch {
-      setSnackbar({ open: true, message: buildNetworkError('la eliminacion del estudiante'), severity: 'error' });
+      setSnackbar({ open: true, message: buildNetworkError('la eliminación del estudiante'), severity: 'error' });
     } finally {
       setIsDeletingStudent(false);
     }
   };
 
   return (
-    <DashboardLayout title="Configuracion" subtitle="Perfil y Administracion" Icon={Settings}>
+    <DashboardLayout title="Configuración" subtitle="Perfil y Administración" Icon={Settings}>
       <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 2 }}>
         <Tabs
           value={activeTab}
@@ -696,7 +696,7 @@ export default function SettingsPage() {
           sx={{ mb: 4, '& .MuiTab-root': { fontWeight: 700, textTransform: 'none', fontSize: '16px' } }}
         >
           <Tab icon={<User size={20} />} iconPosition="start" label="Mi Perfil" />
-          <Tab icon={<Shield size={20} />} iconPosition="start" label="Administracion" />
+          <Tab icon={<Shield size={20} />} iconPosition="start" label="Administración" />
         </Tabs>
 
         {activeTab === 0 && (
@@ -739,7 +739,7 @@ export default function SettingsPage() {
               </Grid>
             ) : (
               <Typography sx={{ color: '#64748B', fontSize: '16px', fontWeight: 600 }}>
-                No pudimos identificar el usuario de la sesion actual.
+                No pudimos identificar el usuario de la sesión actual.
               </Typography>
             )}
           </Card>
@@ -750,7 +750,7 @@ export default function SettingsPage() {
             <Card sx={{ p: 4, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 800 }}>Herramientas de Desarrollo</Typography>
-                <Typography sx={{ color: '#64748B', fontSize: '14px' }}>Acceso rapido al simulador de estudiantes y evaluaciones.</Typography>
+                <Typography sx={{ color: '#64748B', fontSize: '14px' }}>Acceso rápido al simulador de estudiantes y evaluaciones.</Typography>
               </Box>
               <Button
                 variant="outlined"
@@ -766,7 +766,7 @@ export default function SettingsPage() {
                 <BookOpen size={20} /> Crear Facultad
               </Typography>
               <Typography sx={{ color: '#64748B', mb: 3, fontSize: '14px' }}>
-                Anade una nueva facultad para organizar programas academicos.
+                Añade una nueva facultad para organizar programas académicos.
               </Typography>
 
               {status && (
@@ -803,10 +803,10 @@ export default function SettingsPage() {
 
             <Card sx={{ p: 4, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
               <Typography variant="h6" sx={{ fontWeight: 800, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <BookOpen size={20} /> Crear Programa Academico
+                <BookOpen size={20} /> Crear Programa Académico
               </Typography>
               <Typography sx={{ color: '#64748B', mb: 3, fontSize: '14px' }}>
-                Anade un nuevo programa a una facultad existente.
+                Añade un nuevo programa a una facultad existente.
               </Typography>
 
               {status && (
@@ -862,7 +862,7 @@ export default function SettingsPage() {
               <Grid size={{ xs: 12, lg: 6 }}>
                 <Card sx={{ p: 4, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                   <Typography variant="h6" sx={{ fontWeight: 800, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Users size={20} /> Gestion de Usuarios
+                    <Users size={20} /> Gestión de Usuarios
                   </Typography>
                   {isLoadingAdmin ? (
                     <Typography sx={{ color: '#64748B', fontWeight: 600 }}>Cargando usuarios...</Typography>
@@ -900,7 +900,7 @@ export default function SettingsPage() {
               <Grid size={{ xs: 12, lg: 6 }}>
                 <Card sx={{ p: 4, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                   <Typography variant="h6" sx={{ fontWeight: 800, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <GraduationCap size={20} /> Gestion de Estudiantes
+                    <GraduationCap size={20} /> Gestión de Estudiantes
                   </Typography>
                   {isLoadingAdmin ? (
                     <Typography sx={{ color: '#64748B', fontWeight: 600 }}>Cargando estudiantes...</Typography>
@@ -980,24 +980,24 @@ export default function SettingsPage() {
             <>
               <Divider />
               <Typography sx={{ fontWeight: 800, color: '#1E293B', fontSize: '15px' }}>
-                Cambiar contrasena
+                Cambiar contraseña
               </Typography>
               <TextField
-                label="Contrasena actual"
+                label="Contraseña actual"
                 type="password"
                 value={passwordForm.current_password}
                 onChange={(e) => setPasswordForm((current) => ({ ...current, current_password: e.target.value }))}
                 fullWidth
               />
               <TextField
-                label="Nueva contrasena"
+                label="Nueva contraseña"
                 type="password"
                 value={passwordForm.new_password}
                 onChange={(e) => setPasswordForm((current) => ({ ...current, new_password: e.target.value }))}
                 fullWidth
               />
               <TextField
-                label="Confirmar nueva contrasena"
+                label="Confirmar nueva contraseña"
                 type="password"
                 value={passwordForm.confirm_password}
                 onChange={(e) => setPasswordForm((current) => ({ ...current, confirm_password: e.target.value }))}
@@ -1025,7 +1025,7 @@ export default function SettingsPage() {
 
         {selectedStudent && (
           <Stack spacing={3}>
-            <TextField label="Codigo" value={selectedStudent.code} fullWidth disabled />
+            <TextField label="Código" value={selectedStudent.code} fullWidth disabled />
             <TextField label="Programa" value={selectedStudent.program || 'No disponible'} fullWidth disabled />
             <TextField label="Facultad" value={selectedStudent.faculty || 'No disponible'} fullWidth disabled />
             <TextField label="Correo" value={selectedStudent.email} fullWidth disabled />

@@ -25,15 +25,15 @@ import {
 import dayjs from 'dayjs';
 
 const phq9Questions = [
-  'Poco interes o placer en hacer las cosas.',
-  'Se ha sentido decaido/a, deprimido/a o sin esperanzas.',
+  'Poco interés o placer en hacer las cosas.',
+  'Se ha sentido decaído/a, deprimido/a o sin esperanzas.',
   'Problemas en dormirse o en mantenerse dormido/a, o en dormir demasiado.',
-  'Se ha sentido cansado/a o con poca energia.',
+  'Se ha sentido cansado/a o con poca energía.',
   'Tener poco apetito o comer en exceso.',
-  'Sentirse mal consigo mismo/a o sentir que es un fracaso o que se ha fallado a si mismo/a o a su familia.',
-  'Dificultad para concentrarse en las cosas, tales como leer el periodico o ver la television.',
-  'Se ha movido o hablado tan despacio que otras personas se hayan podido dar cuenta? O al contrario, ha estado tan inquieto/a o agitado/a que se ha movido mucho mas de lo normal?',
-  'Pensamientos de que estaria mejor muerto/a o de lastimarse de alguna manera.'
+  'Sentirse mal consigo mismo/a o sentir que es un fracaso o que se ha fallado a sí mismo/a o a su familia.',
+  'Dificultad para concentrarse en las cosas, tales como leer el periódico o ver la televisión.',
+  '¿Se ha movido o hablado tan despacio que otras personas se hayan podido dar cuenta? O, al contrario, ¿ha estado tan inquieto/a o agitado/a que se ha movido mucho más de lo normal?',
+  'Pensamientos de que estaría mejor muerto/a o de lastimarse de alguna manera.'
 ];
 
 const gad7Questions = [
@@ -41,7 +41,7 @@ const gad7Questions = [
   'No poder dejar de preocuparse o no poder controlar la preocupacion.',
   'Preocuparse demasiado por diferentes cosas.',
   'Tener dificultad para relajarse.',
-  'Estar tan inquieto/a que es dificil permanecer quieto/a.',
+  'Estar tan inquieto/a que es difícil permanecer quieto/a.',
   'Irritarse o enfadarse con facilidad.',
   'Sentir miedo, como si algo terrible pudiera pasar.'
 ];
@@ -95,17 +95,17 @@ const parseAppointmentSlot = (appointment: any, index: number): AppointmentSlot 
 const studentSchema = z.object({
   name: z.string().min(2, 'Nombre requerido'),
   last_name: z.string().min(2, 'Apellido requerido'),
-  email: z.string().email('Email invalido'),
-  password: z.string().min(6, 'Minimo 6 caracteres'),
-  student_code: z.string().min(5, 'Codigo requerido'),
+  email: z.string().email('Correo electrónico inválido'),
+  password: z.string().min(6, 'Mínimo 6 caracteres'),
+  student_code: z.string().min(5, 'Código requerido'),
   birth_date: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato debe ser YYYY-MM-DD (ej: 2000-06-17)')
-    .refine((value) => !parseDateInput(value).error, 'Ingresa una fecha de nacimiento valida')
+    .refine((value) => !parseDateInput(value).error, 'Ingresa una fecha de nacimiento válida')
     .refine((value) => {
       const parsed = parseDateInput(value);
       return !parsed.date || parsed.date <= new Date();
     }, 'La fecha de nacimiento no puede estar en el futuro'),
-  gender: z.string().min(1, 'Genero requerido'),
+  gender: z.string().min(1, 'Género requerido'),
   faculty: z.number().int().min(1, 'Selecciona una facultad'),
   program: z.number().int().min(1, 'Selecciona un programa'),
   semester: z.number().int(),
@@ -155,7 +155,7 @@ const DevRegisterPage = () => {
       normalized.includes('dtype') ||
       normalized.includes('narcissism')
     ) {
-      return `El backend de ${formName} fallo al procesar el modelo de prediccion. Parece un problema interno con el archivo de entrenamiento o sus tipos de datos.`;
+      return `El backend de ${formName} falló al procesar el modelo de predicción. Parece un problema interno con el archivo de entrenamiento o sus tipos de datos.`;
     }
 
     return message;
@@ -279,7 +279,7 @@ const DevRegisterPage = () => {
       });
 
       if (response.ok) {
-        setStatus({ type: 'success', message: 'Estudiante registrado. Redirigiendo a verificacion...' });
+        setStatus({ type: 'success', message: 'Estudiante registrado. Redirigiendo a verificación...' });
         fetchData();
         setTimeout(() => {
           router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
@@ -295,7 +295,7 @@ const DevRegisterPage = () => {
 
   const authenticateStudent = async () => {
     if (!selectedStudent || !studentPassword) {
-      setAuthStatus({ type: 'error', message: 'Selecciona un estudiante e ingresa su contrasena.' });
+      setAuthStatus({ type: 'error', message: 'Selecciona un estudiante e ingresa su contraseña.' });
       setTimeout(scrollToForms, 100);
       return null;
     }
@@ -328,7 +328,7 @@ const DevRegisterPage = () => {
       const { access_token } = await loginRes.json();
       setStudentAccessToken(access_token);
       setAuthenticatedStudentId(selectedStudent);
-      setAuthStatus({ type: 'success', message: 'Sesion del estudiante autenticada. Ya puedes resolver formularios y pedir la cita sin volver a ingresar la contrasena.' });
+      setAuthStatus({ type: 'success', message: 'Sesión del estudiante autenticada. Ya puedes resolver formularios y pedir la cita sin volver a ingresar la contraseña.' });
       return access_token;
     } catch (error: any) {
       const message = error?.message || mapAuthNetworkError('login');
@@ -525,13 +525,13 @@ const DevRegisterPage = () => {
                 <TextField {...register('last_name')} label="Apellidos" fullWidth error={!!errors.last_name} helperText={errors.last_name?.message} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField {...register('email')} label="Email" fullWidth error={!!errors.email} helperText={errors.email?.message} />
+                <TextField {...register('email')} label="Correo" fullWidth error={!!errors.email} helperText={errors.email?.message} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField {...register('password')} label="Contrasena" type="password" fullWidth error={!!errors.password} helperText={errors.password?.message} />
+                <TextField {...register('password')} label="Contraseña" type="password" fullWidth error={!!errors.password} helperText={errors.password?.message} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField {...register('student_code')} label="Codigo Estudiantil" fullWidth error={!!errors.student_code} helperText={errors.student_code?.message} />
+                <TextField {...register('student_code')} label="Código Estudiantil" fullWidth error={!!errors.student_code} helperText={errors.student_code?.message} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
@@ -546,8 +546,8 @@ const DevRegisterPage = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField {...register('gender')} defaultValue="" label="Genero" select fullWidth error={!!errors.gender}>
-                  <MenuItem value="" disabled>Seleccionar Genero</MenuItem>
+                <TextField {...register('gender')} defaultValue="" label="Género" select fullWidth error={!!errors.gender}>
+                  <MenuItem value="" disabled>Seleccionar Género</MenuItem>
                   <MenuItem value="Male">Masculino</MenuItem>
                   <MenuItem value="Female">Femenino</MenuItem>
                   <MenuItem value="Other">Otro</MenuItem>
@@ -629,7 +629,7 @@ const DevRegisterPage = () => {
                 </TextField>
               </Grid>
               <Grid size={{ xs: 12, sm: 5 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>2. Ingresa su contrasena:</Typography>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>2. Ingresa su contraseña:</Typography>
                 <TextField
                   type="password"
                   fullWidth
@@ -638,7 +638,7 @@ const DevRegisterPage = () => {
                     setStudentPassword(e.target.value);
                     resetStudentSession();
                   }}
-                  placeholder="Contrasena del estudiante"
+                  placeholder="Contraseña del estudiante"
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 2 }}>
@@ -667,7 +667,7 @@ const DevRegisterPage = () => {
               )}
 
               <Typography variant="body1" sx={{ mb: 4, fontWeight: 700, color: '#64748B' }}>
-                Durante las ultimas 2 semanas, con que frecuencia ha experimentado los siguientes problemas?
+                Durante las últimas 2 semanas, ¿con qué frecuencia ha experimentado los siguientes problemas?
               </Typography>
 
               <Stack spacing={4}>
@@ -686,9 +686,9 @@ const DevRegisterPage = () => {
                           control={<Radio sx={{ color: '#4F8CFF' }} />}
                           label={
                             <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                              {value === 0 && 'Ningun dia'}
-                              {value === 1 && 'Varios dias'}
-                              {value === 2 && 'Mas de la mitad'}
+                              {value === 0 && 'Ningún día'}
+                              {value === 1 && 'Varios días'}
+                              {value === 2 && 'Más de la mitad'}
                               {value === 3 && 'Casi todos'}
                             </Typography>
                           }
@@ -724,7 +724,7 @@ const DevRegisterPage = () => {
               )}
 
               <Typography variant="body1" sx={{ mb: 4, fontWeight: 700, color: '#64748B' }}>
-                Durante las ultimas 2 semanas, con que frecuencia ha experimentado los siguientes problemas?
+                Durante las últimas 2 semanas, ¿con qué frecuencia ha experimentado los siguientes problemas?
               </Typography>
 
               <Stack spacing={4}>
@@ -743,9 +743,9 @@ const DevRegisterPage = () => {
                           control={<Radio sx={{ color: '#4F8CFF' }} />}
                           label={
                             <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                              {value === 0 && 'Ningun dia'}
-                              {value === 1 && 'Varios dias'}
-                              {value === 2 && 'Mas de la mitad'}
+                              {value === 0 && 'Ningún día'}
+                              {value === 1 && 'Varios días'}
+                              {value === 2 && 'Más de la mitad'}
                               {value === 3 && 'Casi todos'}
                             </Typography>
                           }
@@ -847,7 +847,7 @@ const DevRegisterPage = () => {
             </Box>
 
             <Alert severity="info" icon={<ShieldAlert size={18} />} sx={{ mt: 4, borderRadius: '12px', '& .MuiAlert-message': { fontWeight: 600 } }}>
-              PHQ-9, GAD-7 y solicitud de cita ya reutilizan una sola autenticacion del estudiante.
+              PHQ-9, GAD-7 y solicitud de cita ya reutilizan una sola autenticación del estudiante.
             </Alert>
           </AccordionDetails>
         </Accordion>

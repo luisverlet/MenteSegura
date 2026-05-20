@@ -18,8 +18,8 @@ export type AppointmentScheduleValidation = {
   timeError?: string;
 };
 
-const DATE_FORMAT_MESSAGE = 'Usa una fecha valida con formato DD/MM/AAAA.';
-const TIME_FORMAT_MESSAGE = 'Usa una hora valida con formato HH:mm.';
+const DATE_FORMAT_MESSAGE = 'Usa una fecha válida con formato DD/MM/AAAA.';
+const TIME_FORMAT_MESSAGE = 'Usa una hora válida con formato HH:mm.';
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
 
@@ -121,7 +121,7 @@ export const validateDateRangeInput = (
     return {
       isValid: false,
       field: 'startDate',
-      message: `Fecha de inicio invalida. ${start.error}`,
+      message: `Fecha de inicio inválida. ${start.error}`,
     };
   }
 
@@ -130,7 +130,7 @@ export const validateDateRangeInput = (
     return {
       isValid: false,
       field: 'endDate',
-      message: `Fecha de fin invalida. ${end.error}`,
+      message: `Fecha de fin inválida. ${end.error}`,
     };
   }
 
@@ -183,8 +183,8 @@ export const validateAppointmentSchedule = (
   if (Number.isNaN(parsed.getTime())) {
     return {
       isValid: false,
-      dateError: 'Selecciona una fecha valida para la cita.',
-      message: 'Selecciona una fecha valida para la cita.',
+      dateError: 'Selecciona una fecha válida para la cita.',
+      message: 'Selecciona una fecha válida para la cita.',
     };
   }
 
